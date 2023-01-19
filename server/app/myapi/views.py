@@ -8,6 +8,8 @@ import numpy as np
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
+from spotifydb.models import Playlist, Song, User
+
 # export SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
 # export SPOTIPY_CLIENT_SECRET='c0589ef660dd4e23a1cf1bcaef18c5b3'
 # export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
@@ -93,6 +95,36 @@ class LoginSpotify(APIView):
             all_playlist_songs_with_features = flatten_2D_array(all_playlist_songs_with_features_grouped)
             playlist_info['tracks_with_features'] = all_playlist_songs_with_features
         
+        userModel = User()
+        # TODO: grab the id
+        userModel.username = user_object['username']
+        userModel.save()
+        for playlist in user_object['playlists']:
+            playlistModel = Playlist()
+            # TODO: grab the id
+            playlistModel.id = playlist['uri']
+            playlistModel.playlist_name = playlist['name']
+            playlistModel.save()
+
+            for track in playlist['tracks_with_features']:
+                # TODO: get the rest of the fields
+                songModel = Song()
+                songModel.id = track['id']
+                songModel.valence = track['valence']
+                songModel.accousticness = track['acousticness']
+                songModel.danceability = track['danceability']
+                songModel.duration_ms = track['duration_ms']
+                songModel.energy = track['energy']
+                songModel.instrumentalness = track['instrumentalness']
+                songModel.key = track['key']
+                songModel.liveness = track['liveness']
+                songModel.loudness = track['loudness']
+                songModel.speechiness = track['speechiness']
+                songModel.tempo = track['tempo']
+                songModel.save()
+                playlistModel.songs.add(songModel)
+            userModel.playlists.add(playlistModel)
+
         if user_object:
             response['status'] = 200
             response['message'] = 'success'
