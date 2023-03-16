@@ -218,3 +218,5 @@ db.sqlite3
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+
+/algorithms/CollaborativeFiltering/data/
