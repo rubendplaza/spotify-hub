@@ -16,9 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from myapi import views
+from myapi import recommendations
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('', include('myapi.urls')),
     path('api/user_track_info', views.LoginSpotify.as_view()),
+    path('api/get_recommendations', recommendations.Recommender.as_view())
 ]
