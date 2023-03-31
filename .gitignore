@@ -220,3 +220,4 @@ db.sqlite3
 .history
 
 /algorithms/CollaborativeFiltering/data/
+/server/app/spotifydataset.csv

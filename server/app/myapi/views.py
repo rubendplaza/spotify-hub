@@ -18,6 +18,7 @@ from spotifydb.models import Playlist, Song, User
 
 class LoginSpotify(APIView):
     # Make external spotify api call to get user's song information
+    # !!!DONT USE THIS. USE THE POST REQUEST METHOD BELOW.
     def get(self, request, format=None):
         # Create spotipy client
         response = {}
