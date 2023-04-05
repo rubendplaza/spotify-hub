@@ -17,59 +17,56 @@ from spotifydb.models import Playlist, Song, User
 # Create your views here.
 
 class LoginSpotify(APIView):
+
     # Make external spotify api call to get user's song information
-    # !!!DONT USE THIS. USE THE POST REQUEST METHOD BELOW.
     def get(self, request, format=None):
         # Create spotipy client
         response = {}
         auth_manager = SpotifyClientCredentials(client_id="95ca7ded0e274316a1c21476f83e1576", client_secret="c0589ef660dd4e23a1cf1bcaef18c5b3")
         sp = spotipy.Spotify(auth_manager=auth_manager)
 
-        # Get user playlist ids
-        playlist_ids = get_user_playlists_ids(sp, 'rubendplaza')
+        # This is the object that is returned back to the user
+        user_object = {}
+        user_object['user_id'] = request.data.get('username')
 
-        # Lists to store user information
-        # OVERALL OPTIMIZATION: Create database models to store this information so we only go to spotify API when #                       we haven't already seen a track.
-        playlist_tracks = []
-        all_playlists_tracks = []
-        all_tracks_information = []
+        # Getting playlist ids
+        user_playlists_id = get_user_playlists_ids(sp, user_object['user_id'])
 
-        # Iterate over playlist ids and get every song they have in their playlists
-        # OPTIMIZATION: Only retrieve track ids not all this other information
-        for playlist_id in playlist_ids:
-            playlist_tracks = sp.playlist_tracks(playlist_id=playlist_id, fields='items(track(album(id,name,album_type),id,name,popularity,artists(id,name)))')
-            all_playlists_tracks += playlist_tracks['items']
-            break
+        # Getting track ids for all songs in the playlists
+        user_song_ids = []
+        for playlist_id in user_playlists_id:
+            current_playlist_song_ids = get_song_ids_in_playlist(sp, playlist_id)
+            user_song_ids.extend(current_playlist_song_ids)
 
-        # For every track get all information for that track
-        # OPTIMIZATION: Store a specific tracks information once in database
-        for track in all_playlists_tracks:
-            current_track = sp.track(track_id=track['track']['id'])
+        # Remove any duplicate songs from users playlists
+        unique_song_id_list = list(set(user_song_ids))
 
-            # A track does not return genre information, so we grab genre information from the artists on the track
-            # OPTMIZATION: Store artist infomration in database so we only every need to retrieve it once
-            #              from the spotify API
-            for idx, artist in enumerate(track['track']['artists']):
-                artist_id = artist['id']
-                current_artist = sp.artist(artist_id=artist_id)
-                genres_for_artist = current_artist['genres']
-                current_track['artists'][idx]['genres'] = genres_for_artist
+        # Get the track name and artist for each unique song id -> Save to a list of dictionaries
+        songs = []
 
-            # Add current tracks information to the list of all tracks
-            all_tracks_information.append(current_track)
-            break
+        for song_id in unique_song_id_list:
+            track = sp.track(song_id)
 
-        # Return all the track information to the client
-        # OPTIMIZATION: This will all happen in the background once a user signs up
-        if len(all_tracks_information) > 0:
+            name = track['name']
+            artist = track['album']['artists'][0]['name']
+
+            # Create a dictionary containing a song's name, artist, and song ID -> Add this dictionary to a list 
+            song_dict = {"name": name, "artist": artist, "song_id": song_id}
+            songs.append(song_dict)
+
+        user_object['songs'] = songs
+
+        if len(songs) > 0:
             response['status'] = 200
             response['message'] = 'success'
-            response['results'] = all_tracks_information
+            response['results'] = user_object
         else:
             response['status'] = 403
             response['message'] = 'error'
             response['results'] = {}
+
         return Response(response)
+    
 
     def post(self, request, format=None):
         response = {}
