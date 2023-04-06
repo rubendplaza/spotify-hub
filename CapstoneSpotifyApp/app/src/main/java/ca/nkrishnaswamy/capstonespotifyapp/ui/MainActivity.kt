@@ -36,9 +36,12 @@ class MainActivity : AppCompatActivity() {
             if (TextUtils.isEmpty(enterUsernameText.text)){
                 errorMessageTextView.text = "Username is Empty"
             } else {
+                errorMessageTextView.setTextColor(resources.getColor(R.color.spotify_green))
+                errorMessageTextView.text = "Loading..."
                 CoroutineScope(Dispatchers.IO).launch{
                     val listOfSongModels = spotifyViewModel.getUserSongs(username)
                     withContext(Dispatchers.Main) {
+                        errorMessageTextView.setTextColor(resources.getColor(R.color.red))
                         if (listOfSongModels.isNullOrEmpty()) {
                             errorMessageTextView.text = "No songs found"
                         } else {

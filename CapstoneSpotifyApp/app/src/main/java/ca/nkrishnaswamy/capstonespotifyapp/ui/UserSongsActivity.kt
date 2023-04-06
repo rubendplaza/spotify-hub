@@ -90,13 +90,18 @@ class UserSongsActivity : AppCompatActivity() {
 
                             getRecommendationsButton.setOnClickListener {
                                 CoroutineScope(Dispatchers.IO).launch{
-                                    val listOfSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id })
+                                     val listOfSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id })
                                      withContext(Dispatchers.Main) {
+                                         errorTextView.text = "Loading..."
                                         if (listOfSongModels.isNullOrEmpty()) {
+                                            errorTextView.setTextColor(resources.getColor(R.color.red))
                                             errorTextView.text = "No recommendations"
+                                            listOfSongModels.add(SongModel("test", "testing", "2"))
                                         } else if (listOfSongModels.count() > 1) {
+                                            errorTextView.setTextColor(resources.getColor(R.color.red))
                                             errorTextView.text = "Error"
                                         } else {
+                                            errorTextView.setTextColor(resources.getColor(R.color.spotify_green))
                                             errorTextView.text = null
                                             val intent = Intent(this@UserSongsActivity, RecommendationActivity::class.java)
                                             intent.putExtra("recommendationsList", listOfSongModels)
