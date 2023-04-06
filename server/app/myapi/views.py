@@ -25,9 +25,11 @@ class LoginSpotify(APIView):
         auth_manager = SpotifyClientCredentials(client_id="95ca7ded0e274316a1c21476f83e1576", client_secret="c0589ef660dd4e23a1cf1bcaef18c5b3")
         sp = spotipy.Spotify(auth_manager=auth_manager)
 
+        username = request.GET.get('username', '')
+
         # This is the object that is returned back to the user
         user_object = {}
-        user_object['user_id'] = request.data.get('username')
+        user_object['user_id'] = username
 
         # Getting playlist ids
         user_playlists_id = get_user_playlists_ids(sp, user_object['user_id'])

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/niran/AndroidStudioProjects/CapstoneSpotifyApp/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.26851851851851855" />
+        <entry key="..\:/Users/niran/AndroidStudioProjects/CapstoneSpotifyApp/app/src/main/res/drawable/background_selector.xml" value="0.1" />
+        <entry key="..\:/Users/niran/AndroidStudioProjects/CapstoneSpotifyApp/app/src/main/res/drawable/song_background.xml" value="0.2351851851851852" />
+        <entry key="..\:/Users/niran/AndroidStudioProjects/CapstoneSpotifyApp/app/src/main/res/layout/activity_display_songs.xml" value="0.2074074074074074" />
+        <entry key="..\:/Users/niran/AndroidStudioProjects/CapstoneSpotifyApp/app/src/main/res/layout/activity_main.xml" value="0.302536231884058" />
+        <entry key="..\:/Users/niran/AndroidStudioProjects/CapstoneSpotifyApp/app/src/main/res/layout/activity_recommendation.xml" value="0.196048632218845" />
+        <entry key="..\:/Users/niran/AndroidStudioProjects/CapstoneSpotifyApp/app/src/main/res/layout/background_selector.xml" value="0.23822463768115942" />
+        <entry key="..\:/Users/niran/AndroidStudioProjects/CapstoneSpotifyApp/app/src/main/res/layout/song_card.xml" value="0.44273127753303965" />
+        <entry key="..\:/Users/niran/AndroidStudioProjects/PicShare/CapstoneSpotifyApp/app/src/main/res/layout/activity_display_songs.xml" value="0.3500905797101449" />
+        <entry key="..\:/Users/niran/AndroidStudioProjects/PicShare/CapstoneSpotifyApp/app/src/main/res/layout/activity_main.xml" value="0.25" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:layout_marginRight="40dp"
+        android:layout_marginLeft="40dp"
+        android:id="@+id/LinCenterLayout">
+
+        <TextView
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="Music Recommender"
+            android:textColor="@color/spotify_green"
+            android:textSize="50sp"
+            android:textStyle="bold"
+            android:fontFamily="cursive"
+            android:layout_gravity="center"
+            android:layout_marginBottom="30dp"
+            android:gravity="center"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="10dp"
+            android:background="@color/dark_grey"
+            android:id="@+id/usernameEnter"
+            android:hint="Spotify Username"
+            android:textColor="@color/white"
+            android:textColorHint="@color/grey"
+            android:singleLine="true"
+            android:imeOptions="actionNext"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Submit"
+            android:id="@+id/submitUsernameButton"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:backgroundTint="@color/spotify_green"
+            android:layout_marginBottom="5dp"/>
+
+        <TextView
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:id="@+id/errorMessage"
+            android:textColor="@color/red"
+            android:textStyle="bold"
+            android:layout_marginBottom="15dp"
+            android:layout_marginTop="5dp"
+            android:gravity="center_horizontal"
+            android:textSize="16sp"/>
+
+    </LinearLayout>
+
+</RelativeLayout>
