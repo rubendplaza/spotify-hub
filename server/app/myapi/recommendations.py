@@ -16,7 +16,7 @@ from myapi.cf_reccs import *
 from sklearn.metrics.pairwise import cosine_similarity
 
 # export SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
-# export SPOTIPY_CLIENT_SECRET='c0589ef660dd4e23a1cf1bcaef18c5b3'
+# export SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
 # export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
 
 # Create your views here.
@@ -25,53 +25,65 @@ from sklearn.metrics.pairwise import cosine_similarity
 class Recommender(APIView):
 
     def __init__(self):
-        
+        pass
         # This thing breaks for us (don't have csv file)
-       (model, interactions, user_dict, artists_dict) = initialize_cf_data()
-       self.model = model
-       self.interactions = interactions
-       self.user_dict = user_dict
-       self.artists_dict = artists_dict
+    #    (model, interactions, user_dict, artists_dict) = initialize_cf_data()
+    #    self.model = model
+    #    self.interactions = interactions
+    #    self.user_dict = user_dict
+    #    self.artists_dict = artists_dict
 
 
     def get(self, request, format=None):
-
         # Used for initialization.
-        # getMySongs -> send back to user and send back user id
+        (model, interactions, user_dict, artists_dict) = initialize_cf_data()
+        self.model = model
+        self.interactions = interactions
+        self.user_dict = user_dict
+        self.artists_dict = artists_dict
 
+        # auth_manager = SpotifyClientCredentials(client_id="95ca7ded0e274316a1c21476f83e1576", client_secret="15ee20c2e8924c80b5693dd9f26daa95")
+        # sp = spotipy.Spotify(auth_manager=auth_manager)
+        # user = sp.user('stevienash98765')
+        # print(f'user received: {user}')
+        print('Finished initializing.')
 
         # This code will be removed.
-        user_id = request.data.get('user_id')
-        nrec_items = 10
-        recommended_artists = get_artists_reccs_for_user(user_id, nrec_items, self.model, self.interactions, self.user_dict, self.artists_dict)
-        print(f'Recommended Artists: {recommended_artists}')
+        # user_id = request.data.get('user_id')
+        # nrec_items = 10
+        # recommended_artists = get_artists_reccs_for_user(user_id, nrec_items, self.model, self.interactions, self.user_dict, self.artists_dict)
+        # print(f'Recommended Artists: {recommended_artists}')
 
         response = {}
         response['status'] = 200
         response['message'] = 'success'
-        response['results'] = recommended_artists
+        response['results'] = 'Server initialized.'
         return Response(response)
 
     def post(self, request, format=None):
-        # {
-        #     "songs": ["DSJKFNEJKF", "dashjkdaan"]
-        # }
+        display_name = get_display_name_from_username(request.data.get('username'))
         song_ids = request.data.get('songs')
         num_of_recommended_songs = request.data.get('num_of_recommended_songs')
 
+        print(f'Display name received: {display_name}')
         print(song_ids)
         print(num_of_recommended_songs)
 
-        auth_manager = SpotifyClientCredentials(client_id="95ca7ded0e274316a1c21476f83e1576", client_secret="c0589ef660dd4e23a1cf1bcaef18c5b3")
+        auth_manager = SpotifyClientCredentials(client_id="95ca7ded0e274316a1c21476f83e1576", client_secret="15ee20c2e8924c80b5693dd9f26daa95")
         sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        #######
+        # CBF #
+        #######
 
         # Get song features using Spotify API (spotipy)
         song_features = sp.audio_features(song_ids)
-        
+        print(f'Received audio features: {song_features}')
         i = 0
         for id in song_ids:
+            print('Trying to get track...')
             track = sp.track(id)
-
+            print(f'Received track: {track}')
             name = track['name']
             artist = track['album']['artists'][0]['name']
 
@@ -90,6 +102,7 @@ class Recommender(APIView):
         ]
 
         # Use CBF model to get recommended number of songs
+        print('Getting recommended songs...')
         recommended_songs = get_CBF_songs(songs, num_of_recommended_songs)
         recommended_songs = recommended_songs[['name', 'artists']]
 
@@ -101,10 +114,21 @@ class Recommender(APIView):
 
         dict_recommended_songs = recommended_songs.to_dict()
 
+        ######
+        # CF #
+        ######
+        # nrec_items = 15
+        # arr_recommended_artists = get_artists_reccs_for_user(display_name, nrec_items, self.model, self.interactions, self.user_dict, self.artists_dict)
+        # print(f'Recommended Artists: {arr_recommended_artists}')
+
+
         response = {}
         response['status'] = 200
         response['message'] = 'success'
-        response['results'] = dict_recommended_songs
+        response['results'] = {
+            'dict_recommended_songs': dict_recommended_songs,
+            'arr_reccommended_artists': "commented"
+        }
 
         return Response(response)
 

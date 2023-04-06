@@ -6,6 +6,7 @@ import lightfm
 # from scipy import sparse
 import random
 import itertools
+from time import *
 
 import pickle
 import os
@@ -14,6 +15,8 @@ import os
 import pandas as pd
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 
 from myapi.cf_helpers import *
 
@@ -25,14 +28,15 @@ def get_artists_reccs_for_user(user_id, nrec_items, model, interactions, user_di
 
 
 def initialize_cf_data():
-    # CHANGE THE MODULO VALUE TO WHATEVER V WAS USED WHEN GETTING THE PICKLE FILE FROM JUPYTER NOTEBOOK 
-    df_playlist = pd.read_csv('spotifydataset.csv', error_bad_lines=False, warn_bad_lines=False, skiprows=lambda i: i>0 and (i % 50 != 0))
+    users_to_add = ['stevienash98765', '31wexqymjgzdkkved4vcwote7r2q', '31jcprt274yhbqbldnen6q4r2rxq']
+    # CHANGE THE MODULO VALUE TO WHATEVER V WAS USED WHEN GETTING THE PICKLE FILE FROM JUPYTER NOTEBOOK
+    df_playlist = pd.read_csv('spotifydataset.csv', error_bad_lines=False, warn_bad_lines=False, skiprows=lambda i: i>0 and (i % 1 != 0))
     print(f'Number of rows: {df_playlist.shape[0]}')
     df_playlist.columns = df_playlist.columns.str.replace('"', '')
     df_playlist.columns = df_playlist.columns.str.replace('name', '')
     df_playlist.columns = df_playlist.columns.str.replace(' ', '')
     # df_playlist.head()
-    df_playlist = add_users_to_dataset(df_playlist)
+    df_playlist = add_users_to_dataset(df_playlist, users_to_add)
 
     # Keeping artists that appear with a minimum frequency. (50)
     df_playlist = df_playlist.groupby('artist').filter(lambda x : len(x) >= 50)
@@ -70,36 +74,106 @@ def initialize_cf_data():
     # Create item dict
     artists_dict = create_item_dict(df=df_artist, id_col="artist_id", name_col="artist")
 
+    print('Importing model...')
     model = import_pickle_model()
-
+    print('Finished importing model.')
     return (model, interactions, user_dict, artists_dict)
 
-# TODO: Do hyper parameter tuning to get best params for model before getting pickle file.
-# TODO: (Add users to dataset using spotify api. Also add them in this way in the jupyter notebook) to get pickle file.
-def add_users_to_dataset(df_playlist):
-    # Adding test user and seeing what the output will be.
-    temp_user_id = '00000000000000000000000000000000'
-    temp_user_artists = [
-        'Eminem', 'Kanye West', '50 Cent', 'Drake', 'Kendrick Lamar', 'Future', 
-        'Lil Baby', 'Snoop Dogg', 'Post Malone', 'Lil Wayne', 'Kid Cudi']
-    temp_track_name = 'testtrackname'
-    temp_playlist_name = 'testplaylist'
+def add_users_to_dataset(df_playlist, users):
+    print('Adding test users to dataset...')
+    auth_manager = SpotifyClientCredentials(client_id="95ca7ded0e274316a1c21476f83e1576", client_secret="15ee20c2e8924c80b5693dd9f26daa95")
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+    new_user_rows = []
+    for username in users:
+        user = sp.user(username)
+        print(f'Received user: {user}')
+        # user_id = user['id']
+        display_name = get_display_name_from_username(username)
+        # playlists = sp.user_playlists(username)
+        playlist_names = get_user_playlists_names(sp, username)
+        print(f'playlist names: {playlist_names}')
+        playlist_ids = get_user_playlists_ids(sp, username)
+        print(f'playlist ids: {playlist_ids}')
+        song_ids = []
+        for playlist_id in playlist_ids:
+            current_playlist_song_ids = get_song_ids_in_playlist(sp, playlist_id)
+            print(f'playlist song ids: {current_playlist_song_ids}')
+            song_ids.extend(current_playlist_song_ids)
+        for song_id in song_ids:
+            print('iterating song ids')
+            track = sp.track(song_id)
+            print(f'Received track from sp: {track}')
 
-    new_rows = []
-    for i in range(5000):
-        temp_artist = random.choice(temp_user_artists)
-        new_row = {
-            'user_id': temp_user_id,
-            'artist': temp_artist,
-            'track': temp_track_name,
-            'playlist': temp_playlist_name
-        }
-        new_rows.append(new_row)
+            name = track['name']
+            artist = track['album']['artists'][0]['name']
 
-    temp_df = pd.DataFrame(new_rows) 
+            # Create a dictionary containing a song's name, artist, and song ID -> Add this dictionary to a list 
+            new_row = {
+                'user_id': display_name,
+                'track': name,
+                'artist': artist,
+                'playlist': playlist_names[0]
+            }
+            print('adding to new row')
+            new_user_rows.append(new_row)
+        sleep(15)
+#     for row in new_user_rows:
+#         print(row)
+    print('updating df')
+    temp_df = pd.DataFrame(new_user_rows) 
     df_playlist = pd.concat([df_playlist, temp_df], ignore_index = True)
-    # df_last = df_playlist.tail(10)
-    # See if user was inserted properly
-    # print(df_last)
-    # df_playlist.loc[df_playlist['user_id'] == temp_user_id]
+    print('Finished adding users to dataset.')
     return df_playlist
+
+def get_user_playlists_names(sp, username):
+    tmp = []
+    playlists = sp.user_playlists(username)
+    print(f'Received playlists: {playlists}')
+    while playlists:
+        print(f'Iterating playlist')
+        for i, playlist in enumerate(playlists['items']):
+            tmp.append(playlist['name'])
+        if playlists['next']:
+            playlists = sp.next(playlists)
+        else:
+            playlists = None
+    return tmp
+
+def get_user_playlists_ids(sp, username):
+    tmp = []
+    playlists = sp.user_playlists(username)
+    print(f'Received playlists: {playlists}')
+    while playlists:
+        print(f'Iterating playlist')
+        for i, playlist in enumerate(playlists['items']):
+            tmp.append(playlist['uri'])
+        if playlists['next']:
+            playlists = sp.next(playlists)
+        else:
+            playlists = None
+    return tmp
+
+def get_song_ids_in_playlist(sp, playlist_id):
+    playlist_tracks = []
+    playlist_tracks_raw = sp.playlist_tracks(playlist_id=playlist_id, fields='items(track(id))')
+    print(f'Received playlist tracks: {playlist_tracks_raw}')
+    for track in playlist_tracks_raw['items']:
+        playlist_tracks.append(track["track"]["id"])
+    return playlist_tracks
+
+# Display names will be used for getting recommendations
+def get_display_name_from_username(username):
+    if (username == '31jcprt274yhbqbldnen6q4r2rxq'):
+        return 'billywalton98765'
+    if (username == 'stevienash98765'):
+        return 'stevienash98765'
+    if (username == '31wexqymjgzdkkved4vcwote7r2q'):
+        return 'plazadruben'
+    
+def get_username_from_display_name(displayname):
+    if (displayname == 'billywalton98765'):
+        return '31jcprt274yhbqbldnen6q4r2rxq'
+    if (displayname == 'stevienash98765'):
+        return 'stevienash98765' 
+    if (displayname == 'plazadruben'):
+        return '31wexqymjgzdkkved4vcwote7r2q'
