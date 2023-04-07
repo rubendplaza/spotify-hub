@@ -23,24 +23,50 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/username"
-        android:layout_above="@id/getRecommendationsButton"
+        android:layout_above="@id/HorizLinLayoutBottom"
         android:layout_marginTop="12dp"
         android:layout_marginLeft="12dp"
         android:layout_marginRight="12dp"
         android:layout_marginBottom="12dp"/>
 
-    <com.google.android.material.button.MaterialButton
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="Get Recommendations"
-        android:id="@+id/getRecommendationsButton"
-        android:textAllCaps="false"
-        android:textSize="16sp"
-        android:backgroundTint="@color/spotify_green"
-        android:layout_marginBottom="5dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
-        android:layout_above="@id/errorMessage"/>
+        android:layout_marginBottom="5dp"
+        android:weightSum="10"
+        android:id="@+id/HorizLinLayoutBottom"
+        android:layout_above="@id/errorMessage">
+
+        <EditText
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="5"
+            android:background="@color/dark_grey"
+            android:id="@+id/recommendationsCountEditText"
+            android:hint="Recommendations Count"
+            android:textColor="@color/white"
+            android:textColorHint="@color/grey"
+            android:imeOptions="actionNext"
+            android:layout_marginEnd="10dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:layout_gravity="center"
+            />
+
+        <com.google.android.material.button.MaterialButton
+            android:layout_width="0dp"
+            android:layout_weight="5"
+            android:layout_height="wrap_content"
+            android:text="Get Recommendations"
+            android:id="@+id/getRecommendationsButton"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/spotify_green"
+            android:layout_gravity="center" />
+
+    </LinearLayout>
 
     <TextView
         android:layout_height="wrap_content"
@@ -49,7 +75,6 @@
         android:textColor="@color/spotify_green"
         android:textStyle="bold"
         android:layout_marginBottom="15dp"
-        android:layout_marginTop="5dp"
         android:gravity="center_horizontal"
         android:textSize="16sp"
         android:layout_alignParentBottom="true"/>

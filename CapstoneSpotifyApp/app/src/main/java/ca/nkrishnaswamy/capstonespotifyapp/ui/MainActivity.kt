@@ -8,6 +8,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
 import ca.nkrishnaswamy.capstonespotifyapp.R
+import ca.nkrishnaswamy.capstonespotifyapp.models.SongModel
 import ca.nkrishnaswamy.capstonespotifyapp.viewModels.SpotifyViewModel
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineScope
@@ -39,7 +40,12 @@ class MainActivity : AppCompatActivity() {
                 errorMessageTextView.setTextColor(resources.getColor(R.color.spotify_green))
                 errorMessageTextView.text = "Loading..."
                 CoroutineScope(Dispatchers.IO).launch{
-                    val listOfSongModels = spotifyViewModel.getUserSongs(username)
+                    // val listOfSongModels = spotifyViewModel.getUserSongs(username)   // UNCOMMENT LATER, and delete 5 lines below this
+                    val listOfSongModels = ArrayList<SongModel>()
+                    listOfSongModels.add(SongModel("Hello", "Adele", "1"))
+                    listOfSongModels.add(SongModel("Don't", "Bryson Tiller", "2"))
+                    listOfSongModels.add(SongModel("pov", "Ariana Grande", "3"))
+                    listOfSongModels.add(SongModel("Adaption", "The Weeknd", "4"))
                     withContext(Dispatchers.Main) {
                         errorMessageTextView.setTextColor(resources.getColor(R.color.red))
                         if (listOfSongModels.isNullOrEmpty()) {
@@ -47,7 +53,8 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             errorMessageTextView.text = null
                             val intent = Intent(this@MainActivity, UserSongsActivity::class.java)
-                            intent.putExtra("username", username)
+//                            intent.putExtra("username", username) // UNCOMMENT LATER
+                            intent.putExtra("username", "31wexqymjgzdkkved4vcwote7r2q") // DELETE LATER
                             intent.putExtra("songsList", listOfSongModels)
                             startActivity(intent)
                         }
