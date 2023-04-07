@@ -32,6 +32,7 @@ class UserSongsActivity : AppCompatActivity() {
     private lateinit var recyclerViewAdapter: SongsRecyclerViewAdapter
     private var tracker: SelectionTracker<Long>? = null
     private val songsList = ArrayList<SongModel>()
+    private lateinit var username: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +51,7 @@ class UserSongsActivity : AppCompatActivity() {
 
         bundle?.let {
             bundle.apply {
-                val username: String? = getString("username")
+                username = getString("username")!!
                 usernameTextView.text = username
 
                 val retrievedSongsList = getParcelableArrayList<SongModel>("songsList")
@@ -90,22 +91,19 @@ class UserSongsActivity : AppCompatActivity() {
 
                             getRecommendationsButton.setOnClickListener {
                                 CoroutineScope(Dispatchers.IO).launch{
-                                     val listOfSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id })
+                                     val listOfSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, 5, username)
                                      withContext(Dispatchers.Main) {
                                          errorTextView.text = "Loading..."
                                         if (listOfSongModels.isNullOrEmpty()) {
                                             errorTextView.setTextColor(resources.getColor(R.color.red))
                                             errorTextView.text = "No recommendations"
                                             listOfSongModels.add(SongModel("test", "testing", "2"))
-                                        } else if (listOfSongModels.count() > 1) {
-                                            errorTextView.setTextColor(resources.getColor(R.color.red))
-                                            errorTextView.text = "Error"
                                         } else {
-                                            errorTextView.setTextColor(resources.getColor(R.color.spotify_green))
                                             errorTextView.text = null
                                             val intent = Intent(this@UserSongsActivity, RecommendationActivity::class.java)
                                             intent.putExtra("recommendationsList", listOfSongModels)
                                             intent.putExtra("overallRetrievedSongs", songsList)
+                                            intent.putExtra("username", username)
                                             startActivity(intent)
                                         }
                                      }

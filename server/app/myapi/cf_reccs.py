@@ -14,6 +14,8 @@ import os
 # import numpy as np
 import pandas as pd
 import warnings
+
+from myapi.track_request_helpers import *
 warnings.simplefilter(action='ignore', category=FutureWarning)
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -23,8 +25,8 @@ from myapi.cf_helpers import *
 # export SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
 # export SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
 # export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
-SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
-SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
+# SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
+# SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
 
 
 def get_artists_reccs_for_user(user_id, nrec_items, model, interactions, user_dict, artists_dict):
@@ -88,8 +90,12 @@ def initialize_cf_data():
 
 def add_users_to_dataset(df_playlist, users):
     print('Adding test users to dataset...')
-    auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID2, client_secret=SPOTIPY_CLIENT_SECRET2)
+
+    auth_manager = SpotifyClientCredentials(client_id=SPOTIFY_CREDS_LIST[CREDS_INDEX][0], client_secret=SPOTIFY_CREDS_LIST[CREDS_INDEX][1])
     sp = spotipy.Spotify(auth_manager=auth_manager)
+
+    spotify_auth_token = create_auth_token(client_id=SPOTIFY_CREDS_LIST[CREDS_INDEX][0], client_secret=SPOTIFY_CREDS_LIST[CREDS_INDEX][1])
+
     new_user_rows = []
     for username in users:
         user = sp.user(username)
@@ -106,11 +112,12 @@ def add_users_to_dataset(df_playlist, users):
             current_playlist_song_ids = get_song_ids_in_playlist(sp, playlist_id)
             print(f'playlist song ids: {current_playlist_song_ids}')
             song_ids.extend(current_playlist_song_ids)
-        for song_id in song_ids:
-            track = sp.track(song_id)
-            print(f'Received track.')
 
-            name = track['name']
+
+        input_tracks = make_request_for_tracks(spotify_auth_token, song_ids)['tracks']
+
+        for track in input_tracks:
+            name = track["name"]
             artist = track['album']['artists'][0]['name']
 
             # Create a dictionary containing a song's name, artist, and song ID -> Add this dictionary to a list 
@@ -122,7 +129,7 @@ def add_users_to_dataset(df_playlist, users):
             }
             # print('adding to new row')
             new_user_rows.append(new_row)
-        sleep(10)
+        
 #     for row in new_user_rows:
 #         print(row)
     # print('updating df')

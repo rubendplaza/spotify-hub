@@ -7,16 +7,27 @@ from rest_framework.response import Response
 import numpy as np
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+from myapi.track_request_helpers import *
 
 from spotifydb.models import Playlist, Song, User
 
 from myapi.cf_reccs import *
 
+import base64
+import requests
+
 # export SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
 # export SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
 # export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
-SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
-SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
+
+# SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
+# SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
+
+# SPOTIPY_CLIENT_ID2='95ca7ded0e274316a1c21476f83e1576'
+# SPOTIPY_CLIENT_SECRET2='15ee20c2e8924c80b5693dd9f26daa95'
+
+# SPOTIPY_CLIENT_ID2='a123485102ba4faebcde3656cccccea5'
+# SPOTIPY_CLIENT_SECRET2='8ee1dc51621c4c28b81fad896eeba044'
 
 # Create your views here.
 
@@ -26,8 +37,10 @@ class LoginSpotify(APIView):
     def get(self, request, format=None):
         # Create spotipy client
         response = {}
-        auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID2, client_secret=SPOTIPY_CLIENT_SECRET2)
+        auth_manager = SpotifyClientCredentials(client_id=SPOTIFY_CREDS_LIST[CREDS_INDEX][0], client_secret=SPOTIFY_CREDS_LIST[CREDS_INDEX][1])
         sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        spotify_auth_token = create_auth_token(client_id=SPOTIFY_CREDS_LIST[CREDS_INDEX][0], client_secret=SPOTIFY_CREDS_LIST[CREDS_INDEX][1])
 
         # username = request.GET.get('username', '')
         username = get_username_from_display_name(request.data.get('username'))
@@ -39,6 +52,8 @@ class LoginSpotify(APIView):
         # Getting playlist ids
         user_playlists_id = get_user_playlists_ids(sp, user_object['user_id'])
 
+        print(f'User Playlist IDs: {user_playlists_id}')
+
         # Getting track ids for all songs in the playlists
         user_song_ids = []
         for playlist_id in user_playlists_id:
@@ -47,12 +62,15 @@ class LoginSpotify(APIView):
 
         # Remove any duplicate songs from users playlists
         unique_song_id_list = list(set(user_song_ids))
+        
+        # print(f'User Song IDs: {unique_song_id_list}')
 
         # Get the track name and artist for each unique song id -> Save to a list of dictionaries
         songs = []
 
         for song_id in unique_song_id_list:
-            track = sp.track(song_id)
+            # track = sp.track(song_id)
+            track = make_request_for_track(spotify_auth_token, song_id)
 
             name = track['name']
             artist = track['album']['artists'][0]['name']
@@ -63,6 +81,8 @@ class LoginSpotify(APIView):
 
         user_object['songs'] = songs
 
+        print(f'Songs Size: {len(songs)}')
+
         if len(songs) > 0:
             response['status'] = 200
             response['message'] = 'success'
@@ -72,73 +92,6 @@ class LoginSpotify(APIView):
             response['message'] = 'error'
             response['results'] = {}
 
-        return Response(response)
-    
-
-    # Not being used.
-    def post(self, request, format=None):
-        response = {}
-        auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID2, client_secret=SPOTIPY_CLIENT_SECRET2)
-        sp = spotipy.Spotify(auth_manager=auth_manager)
-
-        user_object = {}
-        user_object['username'] = request.data.get('username')
-
-        # TODO: Known bug, only returning 100 songs or so. look at ['next']
-
-        # Getting playlist ids
-        user_playlists_info = get_user_playlists_info(sp, request.data.get("username"))
-        user_object['playlists'] = user_playlists_info
-
-        # Getting track ids
-        all_playlist_songs_with_features_grouped = []
-        for playlist_info in user_object['playlists']:
-            current_playlist_song_ids = get_song_ids_in_playlist(sp, playlist_info['uri'])
-            current_playlist_song_ids_grouped = [current_playlist_song_ids[i:i+100] for i in range(0, len(current_playlist_song_ids), 100)] # Split track ids in groups of 100 to make less api calls
-            for song_id_group in current_playlist_song_ids_grouped:
-                songs_with_features_group = get_song_features_by_group(sp, song_id_group)
-                all_playlist_songs_with_features_grouped.append(songs_with_features_group)
-            all_playlist_songs_with_features = flatten_2D_array(all_playlist_songs_with_features_grouped)
-            playlist_info['tracks_with_features'] = all_playlist_songs_with_features
-        
-        userModel = User()
-        # TODO: grab the id
-        userModel.username = user_object['username']
-        userModel.save()
-        for playlist in user_object['playlists']:
-            playlistModel = Playlist()
-            # TODO: grab the id
-            playlistModel.id = playlist['uri']
-            playlistModel.playlist_name = playlist['name']
-            playlistModel.save()
-
-            for track in playlist['tracks_with_features']:
-                # TODO: get the rest of the fields
-                songModel = Song()
-                songModel.id = track['id']
-                songModel.valence = track['valence']
-                songModel.accousticness = track['acousticness']
-                songModel.danceability = track['danceability']
-                songModel.duration_ms = track['duration_ms']
-                songModel.energy = track['energy']
-                songModel.instrumentalness = track['instrumentalness']
-                songModel.key = track['key']
-                songModel.liveness = track['liveness']
-                songModel.loudness = track['loudness']
-                songModel.speechiness = track['speechiness']
-                songModel.tempo = track['tempo']
-                songModel.save()
-                playlistModel.songs.add(songModel)
-            userModel.playlists.add(playlistModel)
-
-        if user_object:
-            response['status'] = 200
-            response['message'] = 'success'
-            response['results'] = user_object
-        else:
-            response['status'] = 403
-            response['message'] = 'error'
-            response['results'] = {}
         return Response(response)
 
 def get_user_playlists_info(sp, username):
@@ -201,3 +154,69 @@ def print_2D_array(arr2D):
     for arr in arr2D:
         print(arr)
         print("\n\n")
+
+    # # Not being used.
+    # def post(self, request, format=None):
+    #     response = {}
+    #     auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID2, client_secret=SPOTIPY_CLIENT_SECRET2)
+    #     sp = spotipy.Spotify(auth_manager=auth_manager)
+
+    #     user_object = {}
+    #     user_object['username'] = request.data.get('username')
+
+    #     # TODO: Known bug, only returning 100 songs or so. look at ['next']
+
+    #     # Getting playlist ids
+    #     user_playlists_info = get_user_playlists_info(sp, request.data.get("username"))
+    #     user_object['playlists'] = user_playlists_info
+
+    #     # Getting track ids
+    #     all_playlist_songs_with_features_grouped = []
+    #     for playlist_info in user_object['playlists']:
+    #         current_playlist_song_ids = get_song_ids_in_playlist(sp, playlist_info['uri'])
+    #         current_playlist_song_ids_grouped = [current_playlist_song_ids[i:i+100] for i in range(0, len(current_playlist_song_ids), 100)] # Split track ids in groups of 100 to make less api calls
+    #         for song_id_group in current_playlist_song_ids_grouped:
+    #             songs_with_features_group = get_song_features_by_group(sp, song_id_group)
+    #             all_playlist_songs_with_features_grouped.append(songs_with_features_group)
+    #         all_playlist_songs_with_features = flatten_2D_array(all_playlist_songs_with_features_grouped)
+    #         playlist_info['tracks_with_features'] = all_playlist_songs_with_features
+        
+    #     userModel = User()
+    #     # TODO: grab the id
+    #     userModel.username = user_object['username']
+    #     userModel.save()
+    #     for playlist in user_object['playlists']:
+    #         playlistModel = Playlist()
+    #         # TODO: grab the id
+    #         playlistModel.id = playlist['uri']
+    #         playlistModel.playlist_name = playlist['name']
+    #         playlistModel.save()
+
+    #         for track in playlist['tracks_with_features']:
+    #             # TODO: get the rest of the fields
+    #             songModel = Song()
+    #             songModel.id = track['id']
+    #             songModel.valence = track['valence']
+    #             songModel.accousticness = track['acousticness']
+    #             songModel.danceability = track['danceability']
+    #             songModel.duration_ms = track['duration_ms']
+    #             songModel.energy = track['energy']
+    #             songModel.instrumentalness = track['instrumentalness']
+    #             songModel.key = track['key']
+    #             songModel.liveness = track['liveness']
+    #             songModel.loudness = track['loudness']
+    #             songModel.speechiness = track['speechiness']
+    #             songModel.tempo = track['tempo']
+    #             songModel.save()
+    #             playlistModel.songs.add(songModel)
+    #         userModel.playlists.add(playlistModel)
+
+    #     if user_object:
+    #         response['status'] = 200
+    #         response['message'] = 'success'
+    #         response['results'] = user_object
+    #     else:
+    #         response['status'] = 403
+    #         response['message'] = 'error'
+    #         response['results'] = {}
+    #     return Response(response)

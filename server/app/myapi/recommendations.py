@@ -9,21 +9,25 @@ import pandas as pd
 
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+from myapi.track_request_helpers import *
 from spotifydb.models import Playlist, Song, User
 
 from myapi.cf_reccs import *
 
 from sklearn.metrics.pairwise import cosine_similarity
 
-SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
-SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
+import base64
+import requests
+
+# SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
+# SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
 # export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
 # SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
 # SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
 
 # Create your views here.
 print('Initializing vars')
-# (model, interactions, user_dict, artists_dict) = initialize_cf_data()]
+(model, interactions, user_dict, artists_dict) = initialize_cf_data()
 
 class Recommender(APIView):
 
@@ -81,47 +85,49 @@ class Recommender(APIView):
         print(type(is_dynamic))
         print(is_dynamic)
 
-        auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET)
+        auth_manager = SpotifyClientCredentials(client_id=SPOTIFY_CREDS_LIST[CREDS_INDEX][0], client_secret=SPOTIFY_CREDS_LIST[CREDS_INDEX][1])
         sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        spotify_auth_token = create_auth_token(client_id=SPOTIFY_CREDS_LIST[CREDS_INDEX][0], client_secret=SPOTIFY_CREDS_LIST[CREDS_INDEX][1])
 
         ######
         # CF #
         ######
-        # arr_recommended_artists = []
-        # if (model == None):
-        #     print('Model doesnt exist')
-        # if (model != None):  
-        #     nrec_items = 15
-        #     arr_recommended_artists = get_artists_reccs_for_user(display_name, nrec_items, model, interactions, user_dict, artists_dict)
-        #     print(f'Recommended Artists: {arr_recommended_artists}')
-        arr_recommended_artists = [
-			"Selena Gomez",
-			"Selena Gomez & The Scene",
-			"Ariana Grande",
-			"Miley Cyrus",
-			"Ed Sheeran",
-			"Katy Perry",
-			"The Weeknd",
-			"Lady Gaga",
-			"Drake",
-			"Beyoncé",
-			"Taylor Swift",
-			"Rihanna",
-			"Pitbull",
-			"David Guetta",
-			"Calvin Harris",
-			"Maroon 5",
-			"Avicii",
-			"Jason Derulo",
-			"Nicki Minaj",
-			"Ellie Goulding",
-			"Bruno Mars",
-			"Coldplay",
-			"Chris Brown",
-			"Justin Timberlake",
-			"JAY Z",
-			"Flo Rida"
-		]
+        arr_recommended_artists = []
+        if (model == None):
+            print('Model doesnt exist')
+        if (model != None):  
+            nrec_items = 15
+            arr_recommended_artists = get_artists_reccs_for_user(display_name, nrec_items, model, interactions, user_dict, artists_dict)
+            print(f'Recommended Artists: {arr_recommended_artists}')
+        # arr_recommended_artists = [
+		# 	"Selena Gomez",
+		# 	"Selena Gomez & The Scene",
+		# 	"Ariana Grande",
+		# 	"Miley Cyrus",
+		# 	"Ed Sheeran",
+		# 	"Katy Perry",
+		# 	"The Weeknd",
+		# 	"Lady Gaga",
+		# 	"Drake",
+		# 	"Beyoncé",
+		# 	"Taylor Swift",
+		# 	"Rihanna",
+		# 	"Pitbull",
+		# 	"David Guetta",
+		# 	"Calvin Harris",
+		# 	"Maroon 5",
+		# 	"Avicii",
+		# 	"Jason Derulo",
+		# 	"Nicki Minaj",
+		# 	"Ellie Goulding",
+		# 	"Bruno Mars",
+		# 	"Coldplay",
+		# 	"Chris Brown",
+		# 	"Justin Timberlake",
+		# 	"JAY Z",
+		# 	"Flo Rida"
+		# ]
 
         #######
         # CBF #
@@ -132,11 +138,13 @@ class Recommender(APIView):
         song_features = sp.audio_features(song_ids)
         i = 0
         # print('Getting sp.tracks...')
-        # all_tracks = sp.tracks(song_ids)
+        # # all_tracks = sp.tracks(song_ids)
+        # track = get_track(spotify_auth_token, song_ids) # replace with make_request_for_track
         # print(f'Received tracks: {all_tracks}')
         # for id in song_ids:
         #     print('Getting track from input songs...')
-        #     track = sp.track(id)
+        # #     track = sp.track(id)
+        #     track = get_track(spotify_auth_token, id) # replace with make_request_for_track
         #     name = track['name']
         #     artist = track['album']['artists'][0]['name']
 
@@ -146,7 +154,17 @@ class Recommender(APIView):
 
             # i = i + 1
 
-        input_tracks = sp.tracks(song_ids)['tracks']
+        # input_tracks_OG = sp.tracks(song_ids)['tracks']
+        input_tracks = make_request_for_tracks(spotify_auth_token, song_ids)['tracks']
+
+        print(f"Size of input tracks received: {len(input_tracks)}")
+
+        # print(f"These are True?: {type(input_tracks_OG) == type(input_tracks)}")
+
+        # print(f"OG: {input_tracks_OG}")
+        # print(f"\nNew Input Tracks: {input_tracks}")
+        # print(f"Type Input Tracks: {type(input_tracks)}")
+
         for track in input_tracks:
             name = track['name']
             artist = track['album']['artists'][0]['name']
@@ -176,7 +194,8 @@ class Recommender(APIView):
 
         print(f'Length of rec songs: {len(recommended_songs)}')
         output_songs = [] # list of object
-        tracks = sp.tracks(recommended_songs)['tracks']
+        # tracks = sp.tracks(recommended_songs)['tracks']
+        tracks = make_request_for_tracks(spotify_auth_token, recommended_songs)['tracks']
 
         for track in tracks:
             name = track['name']
@@ -187,7 +206,8 @@ class Recommender(APIView):
         #     artist = track['album']['artists'][0]['name']
         # for id in recommended_songs:
         #     print('Getting track...')
-        #     track = sp.track(id)
+        # #     track = sp.track(id)
+        #     track = get_track(spotify_auth_token, id) # replace with make_request_for_track
         #     name = track['name']
         #     artist = track['album']['artists'][0]['name']
         #     tmp = { "name": name, "artist": artist }
@@ -324,7 +344,8 @@ def playlist_vector(inputSongs, ModelPlaylist, n):
                 flag = True
                 temp = recommendations.iloc[[j]]
             else:
-                temp = temp.append(recommendations.iloc[j], ignore_index=True)
+                temp.loc[len(temp)] = recommendations.iloc[j]
+                # temp = temp.append(recommendations.iloc[j], ignore_index=True)
 
     temp = temp.sort_values('sim',ascending = False)
     # temp = temp.drop_duplicates(subset=['name'])
