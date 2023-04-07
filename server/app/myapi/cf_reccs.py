@@ -20,11 +20,11 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 from myapi.cf_helpers import *
 
-# export SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
-# export SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
-# export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
-SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
-SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
+# SPOTIFY_CREDS1 = ("95ca7ded0e274316a1c21476f83e1576", "15ee20c2e8924c80b5693dd9f26daa95")
+# SPOTIFY_CREDS2 = ("855879a1dbba413297f108ab660738ed", "f3bd56217f4d4b5b8c8b5898f41cd0be")
+# SPOTIFY_CREDS3 = ("a123485102ba4faebcde3656cccccea5", "8ee1dc51621c4c28b81fad896eeba044")
+# SPOTIPY_CLIENT_ID='855879a1dbba413297f108ab660738ed'
+# SPOTIPY_CLIENT_SECRET='f3bd56217f4d4b5b8c8b5898f41cd0be'
 
 
 def get_artists_reccs_for_user(user_id, nrec_items, model, interactions, user_dict, artists_dict):
@@ -88,7 +88,7 @@ def initialize_cf_data():
 
 def add_users_to_dataset(df_playlist, users):
     print('Adding test users to dataset...')
-    auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID2, client_secret=SPOTIPY_CLIENT_SECRET2)
+    auth_manager = SpotifyClientCredentials(client_id=SPOTIFY_CREDS3[0], client_secret=SPOTIFY_CREDS3[1])
     sp = spotipy.Spotify(auth_manager=auth_manager)
     new_user_rows = []
     for username in users:
@@ -104,13 +104,12 @@ def add_users_to_dataset(df_playlist, users):
         song_ids = []
         for playlist_id in playlist_ids:
             current_playlist_song_ids = get_song_ids_in_playlist(sp, playlist_id)
-            print(f'playlist song ids: {current_playlist_song_ids}')
+            # print(f'playlist song ids: {current_playlist_song_ids}')
             song_ids.extend(current_playlist_song_ids)
-        for song_id in song_ids:
-            track = sp.track(song_id)
-            print(f'Received track.')
+        input_tracks = get_tracks_50_a_time(sp, song_ids)
 
-            name = track['name']
+        for track in input_tracks:
+            name = track["name"]
             artist = track['album']['artists'][0]['name']
 
             # Create a dictionary containing a song's name, artist, and song ID -> Add this dictionary to a list 
@@ -122,7 +121,6 @@ def add_users_to_dataset(df_playlist, users):
             }
             # print('adding to new row')
             new_user_rows.append(new_row)
-        sleep(10)
 #     for row in new_user_rows:
 #         print(row)
     # print('updating df')
@@ -131,10 +129,19 @@ def add_users_to_dataset(df_playlist, users):
     print('Finished adding users to dataset.')
     return df_playlist
 
+def get_tracks_50_a_time(sp, track_ids):
+    tracks = []
+    for i in range(0, len(track_ids), 50):
+        # Get the next 50 tracks using the sp.tracks() method
+        print('Getting 50 tracks....')
+        track_batch = sp.tracks(track_ids[i:i+50])
+        tracks += track_batch['tracks']
+    return tracks
+
 def get_user_playlists_names(sp, username):
     tmp = []
     playlists = sp.user_playlists(username)
-    print(f'Received playlists: {playlists}')
+    print('Received playlists...')
     while playlists:
         # print(f'Iterating playlist')
         for i, playlist in enumerate(playlists['items']):
@@ -148,7 +155,7 @@ def get_user_playlists_names(sp, username):
 def get_user_playlists_ids(sp, username):
     tmp = []
     playlists = sp.user_playlists(username)
-    print(f'Received playlists: {playlists}')
+    print('Received playlists...')
     while playlists:
         # print(f'Iterating playlist')
         for i, playlist in enumerate(playlists['items']):
@@ -162,7 +169,7 @@ def get_user_playlists_ids(sp, username):
 def get_song_ids_in_playlist(sp, playlist_id):
     playlist_tracks = []
     playlist_tracks_raw = sp.playlist_tracks(playlist_id=playlist_id, fields='items(track(id))')
-    print(f'Received playlist tracks: {playlist_tracks_raw}')
+    print('Received playlist tracks...')
     for track in playlist_tracks_raw['items']:
         playlist_tracks.append(track["track"]["id"])
     return playlist_tracks
