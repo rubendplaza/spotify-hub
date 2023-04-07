@@ -26,15 +26,25 @@ import requests
 # SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
 
 # Create your views here.
-print('Initializing vars')
-(model, interactions, user_dict, artists_dict) = initialize_cf_data()
+# print('Initializing vars')
+# (model, interactions, user_dict, artists_dict) = initialize_cf_data()
 
 class Recommender(APIView):
 
+    model = None
+    interactions = None
+    user_dict = None
+    artists_dict = None
+
+    TESTING = 0
+
     def __init__(self):
-        pass
-        # (model, interactions, user_dict, artists_dict) = initialize_cf_data()
-        # print('init method....')
+
+        # pass
+        if self.TESTING == 0:
+            self.TESTING = 1
+            (self.model, self.interactions, self.user_dict, self.artists_dict) = initialize_cf_data()
+            print('init method....')
         # self.model = None
         # self.interactions = None
         # self.user_dict = None
@@ -94,11 +104,11 @@ class Recommender(APIView):
         # CF #
         ######
         arr_recommended_artists = []
-        if (model == None):
+        if (self.model == None):
             print('Model doesnt exist')
-        if (model != None):  
+        if (self.model != None):  
             nrec_items = 15
-            arr_recommended_artists = get_artists_reccs_for_user(display_name, nrec_items, model, interactions, user_dict, artists_dict)
+            arr_recommended_artists = get_artists_reccs_for_user(display_name, nrec_items, self.model, self.interactions, self.user_dict, self.artists_dict)
             print(f'Recommended Artists: {arr_recommended_artists}')
         # arr_recommended_artists = [
 		# 	"Selena Gomez",
@@ -239,8 +249,7 @@ class Recommender(APIView):
             'songs': unique_songs,
         }
 
-        return Response(response)
-    
+        return Response(response)   
 
 def get_cbf_rec_songs_dynamic(sp, artists):
 
