@@ -15,19 +15,15 @@ from myapi.cf_reccs import *
 
 from sklearn.metrics.pairwise import cosine_similarity
 
-# export SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
-# export SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
+SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
+SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
 # export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
-SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
-SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
+# SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
+# SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
 
 # Create your views here.
 print('Initializing vars')
-# (model, interactions, user_dict, artists_dict) = initialize_cf_data()
-# self.model = model
-# self.interactions = interactions
-# self.user_dict = user_dict
-# self.artists_dict = artists_dict
+# (model, interactions, user_dict, artists_dict) = initialize_cf_data()]
 
 class Recommender(APIView):
 
@@ -85,7 +81,7 @@ class Recommender(APIView):
         print(type(is_dynamic))
         print(is_dynamic)
 
-        auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID2, client_secret=SPOTIPY_CLIENT_SECRET2)
+        auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET)
         sp = spotipy.Spotify(auth_manager=auth_manager)
 
         ######
@@ -150,7 +146,7 @@ class Recommender(APIView):
 
             # i = i + 1
 
-        input_tracks = sp.tracks(song_ids)['items']
+        input_tracks = sp.tracks(song_ids)['tracks']
         for track in input_tracks:
             name = track['name']
             artist = track['album']['artists'][0]['name']
@@ -174,12 +170,13 @@ class Recommender(APIView):
 
         # Use CBF model to get recommended number of songs
         print('Getting recommended songs...')
-        recommended_songs = get_CBF_songs(input_songs, 99, all_songs)
+        recommended_songs = get_CBF_songs(input_songs, 50, all_songs)
         # recommended_songs = recommended_songs[['name', 'artists']]
         recommended_songs = recommended_songs['id'].tolist()
 
+        print(f'Length of rec songs: {len(recommended_songs)}')
         output_songs = [] # list of object
-        tracks = sp.tracks(recommended_songs)['items']
+        tracks = sp.tracks(recommended_songs)['tracks']
 
         for track in tracks:
             name = track['name']
@@ -205,7 +202,7 @@ class Recommender(APIView):
 
         df = pd.DataFrame(output_songs)
         df.drop_duplicates(subset=['name', 'artist'], inplace=True)
-        unique_songs = df.to_dict('records')
+        unique_songs = df.head(num_of_recommended_songs).to_dict('records')
 
         print("Recommended songs from CBF:")
         print(recommended_songs)
@@ -219,8 +216,7 @@ class Recommender(APIView):
         response['status'] = 200
         response['message'] = 'success'
         response['results'] = {
-            'dict_recommended_songs': unique_songs,
-            'arr_reccommended_artists': arr_recommended_artists
+            'songs': unique_songs,
         }
 
         return Response(response)
@@ -265,7 +261,7 @@ def get_cbf_rec_songs_dynamic(sp, artists):
 
     return songs
 
-def get_CBF_songs(songs, num_of_recommended_songs=99, all_songs=None):
+def get_CBF_songs(songs, num_of_recommended_songs=50, all_songs=None):
 
     # 
 
@@ -277,7 +273,7 @@ def get_CBF_songs(songs, num_of_recommended_songs=99, all_songs=None):
         data_original = pd.read_csv('data.csv')
     else:
         data_original = pd.DataFrame(all_songs)
-        print(data_original)
+        # print(data_original)
 
     # Drop duplicate songs
     # data_original = data_original.drop_duplicates(subset=['name'])
