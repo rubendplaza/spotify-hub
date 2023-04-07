@@ -20,6 +20,12 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 from myapi.cf_helpers import *
 
+# export SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
+# export SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
+# export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
+SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
+SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
+
 
 def get_artists_reccs_for_user(user_id, nrec_items, model, interactions, user_dict, artists_dict):
 
@@ -30,6 +36,7 @@ def get_artists_reccs_for_user(user_id, nrec_items, model, interactions, user_di
 def initialize_cf_data():
     users_to_add = ['stevienash98765', '31wexqymjgzdkkved4vcwote7r2q', '31jcprt274yhbqbldnen6q4r2rxq']
     # CHANGE THE MODULO VALUE TO WHATEVER V WAS USED WHEN GETTING THE PICKLE FILE FROM JUPYTER NOTEBOOK
+    print('Reading cf csv...')
     df_playlist = pd.read_csv('spotifydataset.csv', error_bad_lines=False, warn_bad_lines=False, skiprows=lambda i: i>0 and (i % 1 != 0))
     print(f'Number of rows: {df_playlist.shape[0]}')
     df_playlist.columns = df_playlist.columns.str.replace('"', '')
@@ -81,28 +88,27 @@ def initialize_cf_data():
 
 def add_users_to_dataset(df_playlist, users):
     print('Adding test users to dataset...')
-    auth_manager = SpotifyClientCredentials(client_id="95ca7ded0e274316a1c21476f83e1576", client_secret="15ee20c2e8924c80b5693dd9f26daa95")
+    auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID2, client_secret=SPOTIPY_CLIENT_SECRET2)
     sp = spotipy.Spotify(auth_manager=auth_manager)
     new_user_rows = []
     for username in users:
         user = sp.user(username)
-        print(f'Received user: {user}')
+        # print(f'Received user: {user}')
         # user_id = user['id']
         display_name = get_display_name_from_username(username)
         # playlists = sp.user_playlists(username)
         playlist_names = get_user_playlists_names(sp, username)
-        print(f'playlist names: {playlist_names}')
+        # print(f'playlist names: {playlist_names}')
         playlist_ids = get_user_playlists_ids(sp, username)
-        print(f'playlist ids: {playlist_ids}')
+        # print(f'playlist ids: {playlist_ids}')
         song_ids = []
         for playlist_id in playlist_ids:
             current_playlist_song_ids = get_song_ids_in_playlist(sp, playlist_id)
             print(f'playlist song ids: {current_playlist_song_ids}')
             song_ids.extend(current_playlist_song_ids)
         for song_id in song_ids:
-            print('iterating song ids')
             track = sp.track(song_id)
-            print(f'Received track from sp: {track}')
+            print(f'Received track.')
 
             name = track['name']
             artist = track['album']['artists'][0]['name']
@@ -114,12 +120,12 @@ def add_users_to_dataset(df_playlist, users):
                 'artist': artist,
                 'playlist': playlist_names[0]
             }
-            print('adding to new row')
+            # print('adding to new row')
             new_user_rows.append(new_row)
-        sleep(15)
+        sleep(10)
 #     for row in new_user_rows:
 #         print(row)
-    print('updating df')
+    # print('updating df')
     temp_df = pd.DataFrame(new_user_rows) 
     df_playlist = pd.concat([df_playlist, temp_df], ignore_index = True)
     print('Finished adding users to dataset.')
@@ -130,7 +136,7 @@ def get_user_playlists_names(sp, username):
     playlists = sp.user_playlists(username)
     print(f'Received playlists: {playlists}')
     while playlists:
-        print(f'Iterating playlist')
+        # print(f'Iterating playlist')
         for i, playlist in enumerate(playlists['items']):
             tmp.append(playlist['name'])
         if playlists['next']:
@@ -144,7 +150,7 @@ def get_user_playlists_ids(sp, username):
     playlists = sp.user_playlists(username)
     print(f'Received playlists: {playlists}')
     while playlists:
-        print(f'Iterating playlist')
+        # print(f'Iterating playlist')
         for i, playlist in enumerate(playlists['items']):
             tmp.append(playlist['uri'])
         if playlists['next']:

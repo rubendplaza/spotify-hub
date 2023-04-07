@@ -15,6 +15,8 @@ from myapi.cf_reccs import *
 # export SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
 # export SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
 # export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
+SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
+SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
 
 # Create your views here.
 
@@ -24,7 +26,7 @@ class LoginSpotify(APIView):
     def get(self, request, format=None):
         # Create spotipy client
         response = {}
-        auth_manager = SpotifyClientCredentials(client_id="95ca7ded0e274316a1c21476f83e1576", client_secret="15ee20c2e8924c80b5693dd9f26daa95")
+        auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID2, client_secret=SPOTIPY_CLIENT_SECRET2)
         sp = spotipy.Spotify(auth_manager=auth_manager)
 
         # username = request.GET.get('username', '')
@@ -73,9 +75,10 @@ class LoginSpotify(APIView):
         return Response(response)
     
 
+    # Not being used.
     def post(self, request, format=None):
         response = {}
-        auth_manager = SpotifyClientCredentials(client_id="95ca7ded0e274316a1c21476f83e1576", client_secret="15ee20c2e8924c80b5693dd9f26daa95")
+        auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID2, client_secret=SPOTIPY_CLIENT_SECRET2)
         sp = spotipy.Spotify(auth_manager=auth_manager)
 
         user_object = {}
