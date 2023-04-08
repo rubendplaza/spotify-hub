@@ -10,6 +10,7 @@ from time import *
 
 import pickle
 import os
+import json
 
 # import numpy as np
 import pandas as pd
@@ -22,9 +23,8 @@ from myapi.cf_helpers import *
 
 # SPOTIFY_CREDS1 = ("95ca7ded0e274316a1c21476f83e1576", "15ee20c2e8924c80b5693dd9f26daa95")
 # SPOTIFY_CREDS2 = ("855879a1dbba413297f108ab660738ed", "f3bd56217f4d4b5b8c8b5898f41cd0be")
-# SPOTIFY_CREDS3 = ("a123485102ba4faebcde3656cccccea5", "8ee1dc51621c4c28b81fad896eeba044")
-# SPOTIPY_CLIENT_ID='855879a1dbba413297f108ab660738ed'
-# SPOTIPY_CLIENT_SECRET='f3bd56217f4d4b5b8c8b5898f41cd0be'
+SPOTIFY_CREDS3 = ("a123485102ba4faebcde3656cccccea5", "8ee1dc51621c4c28b81fad896eeba044")
+# SPOTIFY_CREDS4 = ("da2457a6e39742e8ae047ff77018bb4c", "d559c4651db14d9baff2a2c25234c69a")
 
 
 def get_artists_reccs_for_user(user_id, nrec_items, model, interactions, user_dict, artists_dict):
@@ -91,39 +91,55 @@ def add_users_to_dataset(df_playlist, users):
     auth_manager = SpotifyClientCredentials(client_id=SPOTIFY_CREDS3[0], client_secret=SPOTIFY_CREDS3[1])
     sp = spotipy.Spotify(auth_manager=auth_manager)
     new_user_rows = []
-    for username in users:
-        user = sp.user(username)
-        # print(f'Received user: {user}')
-        # user_id = user['id']
-        display_name = get_display_name_from_username(username)
-        # playlists = sp.user_playlists(username)
-        playlist_names = get_user_playlists_names(sp, username)
-        # print(f'playlist names: {playlist_names}')
-        playlist_ids = get_user_playlists_ids(sp, username)
-        # print(f'playlist ids: {playlist_ids}')
-        song_ids = []
-        for playlist_id in playlist_ids:
-            current_playlist_song_ids = get_song_ids_in_playlist(sp, playlist_id)
-            # print(f'playlist song ids: {current_playlist_song_ids}')
-            song_ids.extend(current_playlist_song_ids)
-        input_tracks = get_tracks_50_a_time(sp, song_ids)
+    users_in_json = False
+    # check for json file first
+    with open('dummy_user_dump.json', 'r') as f:
+        data = json.load(f)
+        if 'new_rows' in data:
+            print('Users loading from json...')
+            new_user_rows = data['new_rows']
+            users_in_json = True
 
-        for track in input_tracks:
-            name = track["name"]
-            artist = track['album']['artists'][0]['name']
+    if not users_in_json:
+        for username in users:
+            user = sp.user(username)
+            # print(f'Received user: {user}')
+            # user_id = user['id']
+            display_name = get_display_name_from_username(username)
+            # playlists = sp.user_playlists(username)
+            playlist_names = get_user_playlists_names(sp, username)
+            # print(f'playlist names: {playlist_names}')
+            playlist_ids = get_user_playlists_ids(sp, username)
+            # print(f'playlist ids: {playlist_ids}')
+            song_ids = []
+            for playlist_id in playlist_ids:
+                current_playlist_song_ids = get_song_ids_in_playlist(sp, playlist_id)
+                # print(f'playlist song ids: {current_playlist_song_ids}')
+                song_ids.extend(current_playlist_song_ids)
+            input_tracks = get_tracks_50_a_time(sp, song_ids)
 
-            # Create a dictionary containing a song's name, artist, and song ID -> Add this dictionary to a list 
-            new_row = {
-                'user_id': display_name,
-                'track': name,
-                'artist': artist,
-                'playlist': playlist_names[0]
-            }
-            # print('adding to new row')
-            new_user_rows.append(new_row)
-#     for row in new_user_rows:
-#         print(row)
-    # print('updating df')
+            for track in input_tracks:
+                name = track["name"]
+                artist = track['album']['artists'][0]['name']
+
+                # Create a dictionary containing a song's name, artist, and song ID -> Add this dictionary to a list 
+                new_row = {
+                    'user_id': display_name,
+                    'track': name,
+                    'artist': artist,
+                    'playlist': playlist_names[0]
+                }
+                # print('adding to new row')
+                new_user_rows.append(new_row)
+            
+            sleep(30)
+
+        data = {
+            "new_rows": new_user_rows
+        }
+        with open('dummy_user_dump.json', 'w') as f:
+            json.dump(data, f)
+            
     temp_df = pd.DataFrame(new_user_rows) 
     df_playlist = pd.concat([df_playlist, temp_df], ignore_index = True)
     print('Finished adding users to dataset.')
@@ -136,18 +152,21 @@ def get_tracks_50_a_time(sp, track_ids):
         print('Getting 50 tracks....')
         track_batch = sp.tracks(track_ids[i:i+50])
         tracks += track_batch['tracks']
+        sleep(5)
     return tracks
 
 def get_user_playlists_names(sp, username):
     tmp = []
     playlists = sp.user_playlists(username)
     print('Received playlists...')
+    sleep(5)
     while playlists:
         # print(f'Iterating playlist')
         for i, playlist in enumerate(playlists['items']):
             tmp.append(playlist['name'])
         if playlists['next']:
             playlists = sp.next(playlists)
+            sleep(5)
         else:
             playlists = None
     return tmp
@@ -156,12 +175,14 @@ def get_user_playlists_ids(sp, username):
     tmp = []
     playlists = sp.user_playlists(username)
     print('Received playlists...')
+    sleep(5)
     while playlists:
         # print(f'Iterating playlist')
         for i, playlist in enumerate(playlists['items']):
             tmp.append(playlist['uri'])
         if playlists['next']:
             playlists = sp.next(playlists)
+            sleep(5)
         else:
             playlists = None
     return tmp
@@ -169,6 +190,7 @@ def get_user_playlists_ids(sp, username):
 def get_song_ids_in_playlist(sp, playlist_id):
     playlist_tracks = []
     playlist_tracks_raw = sp.playlist_tracks(playlist_id=playlist_id, fields='items(track(id))')
+    sleep(5)
     print('Received playlist tracks...')
     for track in playlist_tracks_raw['items']:
         playlist_tracks.append(track["track"]["id"])

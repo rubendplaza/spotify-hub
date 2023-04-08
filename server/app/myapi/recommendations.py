@@ -15,36 +15,16 @@ from myapi.cf_reccs import *
 
 from sklearn.metrics.pairwise import cosine_similarity
 
-SPOTIPY_CLIENT_ID='95ca7ded0e274316a1c21476f83e1576'
-SPOTIPY_CLIENT_SECRET='15ee20c2e8924c80b5693dd9f26daa95'
-# export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
-# SPOTIPY_CLIENT_ID2='855879a1dbba413297f108ab660738ed'
-# SPOTIPY_CLIENT_SECRET2='f3bd56217f4d4b5b8c8b5898f41cd0be'
+# SPOTIFY_CREDS1 = ("95ca7ded0e274316a1c21476f83e1576", "15ee20c2e8924c80b5693dd9f26daa95")
+# SPOTIFY_CREDS2 = ("855879a1dbba413297f108ab660738ed", "f3bd56217f4d4b5b8c8b5898f41cd0be")
+# SPOTIFY_CREDS3 = ("a123485102ba4faebcde3656cccccea5", "8ee1dc51621c4c28b81fad896eeba044")
+SPOTIFY_CREDS4 = ("da2457a6e39742e8ae047ff77018bb4c", "d559c4651db14d9baff2a2c25234c69a")
 
 # Create your views here.
 print('Initializing vars')
-# (model, interactions, user_dict, artists_dict) = initialize_cf_data()]
+(model, interactions, user_dict, artists_dict) = initialize_cf_data()
 
 class Recommender(APIView):
-
-    def __init__(self):
-        pass
-        # (model, interactions, user_dict, artists_dict) = initialize_cf_data()
-        # print('init method....')
-        # self.model = None
-        # self.interactions = None
-        # self.user_dict = None
-        # self.artists_dict = None
-
-    def initialize_cf_vars(self):
-        pass
-        # print('Initializing method call...')
-        # (model, interactions, user_dict, artists_dict) = initialize_cf_data()
-        # self.model = model
-        # self.interactions = interactions
-        # self.user_dict = user_dict
-        # self.artists_dict = artists_dict
-
 
     def get(self, request, format=None):
         
@@ -81,47 +61,47 @@ class Recommender(APIView):
         print(type(is_dynamic))
         print(is_dynamic)
 
-        auth_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET)
+        auth_manager = SpotifyClientCredentials(client_id=SPOTIFY_CREDS4[0], client_secret=SPOTIFY_CREDS4[1])
         sp = spotipy.Spotify(auth_manager=auth_manager)
 
         ######
         # CF #
         ######
-        # arr_recommended_artists = []
-        # if (model == None):
-        #     print('Model doesnt exist')
-        # if (model != None):  
-        #     nrec_items = 15
-        #     arr_recommended_artists = get_artists_reccs_for_user(display_name, nrec_items, model, interactions, user_dict, artists_dict)
-        #     print(f'Recommended Artists: {arr_recommended_artists}')
-        arr_recommended_artists = [
-			"Selena Gomez",
-			"Selena Gomez & The Scene",
-			"Ariana Grande",
-			"Miley Cyrus",
-			"Ed Sheeran",
-			"Katy Perry",
-			"The Weeknd",
-			"Lady Gaga",
-			"Drake",
-			"Beyoncé",
-			"Taylor Swift",
-			"Rihanna",
-			"Pitbull",
-			"David Guetta",
-			"Calvin Harris",
-			"Maroon 5",
-			"Avicii",
-			"Jason Derulo",
-			"Nicki Minaj",
-			"Ellie Goulding",
-			"Bruno Mars",
-			"Coldplay",
-			"Chris Brown",
-			"Justin Timberlake",
-			"JAY Z",
-			"Flo Rida"
-		]
+        arr_recommended_artists = []
+        if (model == None):
+            print('Model doesnt exist')
+        if (model != None):  
+            nrec_items = 15
+            arr_recommended_artists = get_artists_reccs_for_user(display_name, nrec_items, model, interactions, user_dict, artists_dict)
+            print(f'Recommended Artists: {arr_recommended_artists}')
+        # arr_recommended_artists = [
+		# 	"Selena Gomez",
+		# 	"Selena Gomez & The Scene",
+		# 	"Ariana Grande",
+		# 	"Miley Cyrus",
+		# 	"Ed Sheeran",
+		# 	"Katy Perry",
+		# 	"The Weeknd",
+		# 	"Lady Gaga",
+		# 	"Drake",
+		# 	"Beyoncé",
+		# 	"Taylor Swift",
+		# 	"Rihanna",
+		# 	"Pitbull",
+		# 	"David Guetta",
+		# 	"Calvin Harris",
+		# 	"Maroon 5",
+		# 	"Avicii",
+		# 	"Jason Derulo",
+		# 	"Nicki Minaj",
+		# 	"Ellie Goulding",
+		# 	"Bruno Mars",
+		# 	"Coldplay",
+		# 	"Chris Brown",
+		# 	"Justin Timberlake",
+		# 	"JAY Z",
+		# 	"Flo Rida"
+		# ]
 
         #######
         # CBF #
@@ -130,7 +110,7 @@ class Recommender(APIView):
         # Get song features using Spotify API (spotipy)
         print('Starting CBF...')
         song_features = sp.audio_features(song_ids)
-        i = 0
+        
         # print('Getting sp.tracks...')
         # all_tracks = sp.tracks(song_ids)
         # print(f'Received tracks: {all_tracks}')
@@ -145,7 +125,7 @@ class Recommender(APIView):
         #     song_features[i].update({"artist": artist})
 
             # i = i + 1
-
+        i = 0
         input_tracks = sp.tracks(song_ids)['tracks']
         for track in input_tracks:
             name = track['name']
@@ -227,15 +207,18 @@ def get_cbf_rec_songs_dynamic(sp, artists):
     artist_uris = []
     print('Artist searches...')
     for artist in artists:
+        print('Artist search')
         artist_search = sp.search(q=artist, type='artist')
         first_name_from_search = artist_search['artists']['items'][0]['name']
         if (first_name_from_search == artist):
             artist_uris.append(artist_search['artists']['items'][0]['uri'])
             continue
+        sleep(0.25)
 
     print('Getting albums....')
     track_uris = []
     for artist_uri in artist_uris:
+        print('New artist...')
         artist_albums = sp.artist_albums(artist_uri, album_type='album')
         for album in artist_albums['items']:
             album_uri = album['uri']
@@ -243,6 +226,7 @@ def get_cbf_rec_songs_dynamic(sp, artists):
             for track in tracks:
                 track_uri = track['uri']
                 track_uris.append(track_uri)
+            sleep(0.1)
 
     print('Getting audio features...')
     song_features = []
@@ -251,13 +235,25 @@ def get_cbf_rec_songs_dynamic(sp, artists):
         tmp_song_features = sp.audio_features(track_uris[0:99])
         song_features += tmp_song_features
         track_uris = track_uris[99:]
+    
+    data = {
+        "features": song_features
+    }
+    with open('dump.json', 'w') as f:
+        json.dump(data, f)
 
     # Desired features for our content based algorithm
     desired_features = ['id', 'valence', 'acousticness', 'danceability', 'energy', 'instrumentalness', 'liveness', 'speechiness',]
     # Create new list of song dictionaries with only desired features
     songs = [
-        {k: v for k, v in d.items() if k in desired_features} for d in song_features
+        {k: v for k, v in d.items() if k in desired_features} for d in song_features if d is not None
     ]
+    # songs = [
+    #     (new_dict := {k: v for k, v in d.items() if k in desired_features}, 
+    #     print(f"Iteration {i+1}: {len(new_dict)} desired features added to new song dictionary."))
+    #     [0] # discard the print statement and keep only the new_dict
+    #     for i, d in enumerate(song_features)
+    # ]
 
     return songs
 
@@ -324,6 +320,7 @@ def playlist_vector(inputSongs, ModelPlaylist, n):
                 flag = True
                 temp = recommendations.iloc[[j]]
             else:
+                # temp.loc[len(temp)] = recommendations.iloc[j]
                 temp = temp.append(recommendations.iloc[j], ignore_index=True)
 
     temp = temp.sort_values('sim',ascending = False)
