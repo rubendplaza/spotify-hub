@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
+import android.widget.ToggleButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.selection.SelectionPredicates
@@ -29,6 +31,7 @@ class UserSongsActivity : AppCompatActivity() {
     private lateinit var errorTextView : TextView
     private lateinit var getRecommendationsButton : MaterialButton
     private lateinit var countTextView : TextView
+    private lateinit var recommendationTypeToggle : ToggleButton
     private lateinit var spotifyViewModel : SpotifyViewModel
     private lateinit var recyclerViewAdapter: SongsRecyclerViewAdapter
     private var tracker: SelectionTracker<Long>? = null
@@ -36,6 +39,7 @@ class UserSongsActivity : AppCompatActivity() {
     private var listOfRecommendedSongModels = ArrayList<SongModel>()
     private lateinit var userId: String
     private lateinit var username: String
+    private var isDynamic: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +54,12 @@ class UserSongsActivity : AppCompatActivity() {
         getRecommendationsButton = findViewById(R.id.getRecommendationsButton)
         getRecommendationsButton.visibility = View.INVISIBLE
         countTextView = findViewById(R.id.recommendationsCountEditText)
-        countTextView.visibility = View.INVISIBLE
+        recommendationTypeToggle = findViewById(R.id.recommendationTypeToggle)
+
+        recommendationTypeToggle.setOnCheckedChangeListener { _, isChecked ->
+            isDynamic = isChecked
+            Toast.makeText(this, if(isChecked) "Dynamic Recommendation Mode ON" else "Dynamic Recommendation OFF", Toast.LENGTH_SHORT).show()
+        }
 
         val bundle: Bundle? = intent.extras
 
@@ -89,7 +98,7 @@ class UserSongsActivity : AppCompatActivity() {
                     if (nItems > 0) {
                         errorTextView.text = null
                         getRecommendationsButton.visibility = View.VISIBLE
-                        countTextView.visibility = View.VISIBLE
+
                         if (tracker?.selection != null) {
                             val selectedList = tracker!!.selection.map {
                                 recyclerViewAdapter.getSongsList()[it.toInt()]
@@ -102,7 +111,7 @@ class UserSongsActivity : AppCompatActivity() {
                                     errorTextView.text = "Recommendations count must be a non-empty positive number."
                                 } else {
                                     CoroutineScope(Dispatchers.IO).launch{
-                                        // listOfRecommendedSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, numOfRecommendedSongs, userId) // UNCOMMENT THIS LATER
+                                        // listOfRecommendedSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, numOfRecommendedSongs, userId, isDynamic) // UNCOMMENT THIS LATER
                                         Log.d("TESTT", userId)
                                         listOfRecommendedSongModels.add(SongModel("Bye", "MAdele", "5"))
                                         listOfRecommendedSongModels.add(SongModel("Won't", "Wryson Tiller", "6"))
@@ -132,7 +141,6 @@ class UserSongsActivity : AppCompatActivity() {
                     } else {
                         errorTextView.text = null
                         getRecommendationsButton.visibility = View.INVISIBLE
-                        countTextView.visibility = View.INVISIBLE
                     }
                 }
             })

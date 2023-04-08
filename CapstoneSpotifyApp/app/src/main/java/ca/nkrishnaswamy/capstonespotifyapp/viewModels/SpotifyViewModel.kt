@@ -15,8 +15,8 @@ class SpotifyViewModel(application: Application): AndroidViewModel(application) 
         return repository.getUserSongs(username)
     }
 
-    suspend fun getRecommendations(songIdsList: List<String>, numOfRecommendedSongs: Int, username: String): ArrayList<SongModel> {
-        return repository.getRecommendations(songIdsList, numOfRecommendedSongs, username)
+    suspend fun getRecommendations(songIdsList: List<String>, numOfRecommendedSongs: Int, username: String, isDynamic: Boolean): ArrayList<SongModel> {
+        return repository.getRecommendations(songIdsList, numOfRecommendedSongs, username, isDynamic)
     }
 
 }

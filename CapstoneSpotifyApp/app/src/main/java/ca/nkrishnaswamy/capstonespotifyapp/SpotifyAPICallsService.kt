@@ -18,9 +18,9 @@ interface SpotifyAPICallsService {
     companion object {
         operator fun invoke(): SpotifyAPICallsService {
             val client = OkHttpClient.Builder()
-                .connectTimeout(120, TimeUnit.SECONDS)
-                .writeTimeout(120, TimeUnit.SECONDS)
-                .readTimeout(120, TimeUnit.SECONDS)
+                .connectTimeout(150, TimeUnit.SECONDS)
+                .writeTimeout(150, TimeUnit.SECONDS)
+                .readTimeout(150, TimeUnit.SECONDS)
                 .build()
             val retrofit = Retrofit.Builder().baseUrl(baseUrl).client(client).addConverterFactory(
                 GsonConverterFactory.create()).build()

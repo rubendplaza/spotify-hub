@@ -35,15 +35,14 @@
         android:orientation="horizontal"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
-        android:layout_marginBottom="5dp"
         android:weightSum="10"
         android:id="@+id/HorizLinLayoutBottom"
-        android:layout_above="@id/errorMessage">
+        android:layout_above="@id/getRecommendationsButton">
 
         <EditText
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="5"
+            android:layout_weight="6"
             android:background="@color/dark_grey"
             android:id="@+id/recommendationsCountEditText"
             android:hint="Recommendations Count"
@@ -56,17 +55,28 @@
             android:layout_gravity="center"
             />
 
-        <com.google.android.material.button.MaterialButton
+        <ToggleButton
+            android:id="@+id/recommendationTypeToggle"
             android:layout_width="0dp"
-            android:layout_weight="5"
+            android:layout_weight="4"
             android:layout_height="wrap_content"
-            android:text="Get Recommendations"
-            android:id="@+id/getRecommendationsButton"
-            android:textAllCaps="false"
-            android:backgroundTint="@color/spotify_green"
-            android:layout_gravity="center" />
+            android:checked="true"
+            android:textOff="Default"
+            android:textOn="Dynamic"/>
 
     </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Get Recommendations"
+        android:id="@+id/getRecommendationsButton"
+        android:textAllCaps="false"
+        android:backgroundTint="@color/spotify_green"
+        android:layout_gravity="center"
+        android:layout_above="@id/errorMessage"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp" />
 
     <TextView
         android:layout_height="wrap_content"

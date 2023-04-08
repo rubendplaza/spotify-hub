@@ -50,13 +50,13 @@ class SpotifyUserRepository() {
         return userResultsResponseModel
     }
 
-    suspend fun getRecommendations(songIdsList: List<String>, numOfRecommendedSongs: Int, username: String) : ArrayList<SongModel> {
+    suspend fun getRecommendations(songIdsList: List<String>, numOfRecommendedSongs: Int, username: String, isDynamic: Boolean) : ArrayList<SongModel> {
 
         val jsonObject = JSONObject()
         jsonObject.put("songs", songIdsList)
         jsonObject.put("num_of_recommended_songs", numOfRecommendedSongs)
         jsonObject.put("username", username)
-        jsonObject.put("is_dynamic", true)
+        jsonObject.put("is_dynamic", isDynamic)
 
         val jsonObjectString = jsonObject.toString()
         val requestBody = jsonObjectString.toRequestBody("application/json".toMediaTypeOrNull())
