@@ -13,6 +13,7 @@ import com.google.android.material.button.MaterialButton
 class RecommendationActivity : AppCompatActivity() {
     private lateinit var backButton : MaterialButton
     private val overallSongsList = ArrayList<SongModel>()
+    private lateinit var userId: String
     private lateinit var username: String
     private val recommendationsList = ArrayList<SongModel>()
     private lateinit var recommendationsRVAdapter: RecommendationsRecyclerViewAdapter
@@ -39,6 +40,7 @@ class RecommendationActivity : AppCompatActivity() {
                     overallSongsList.addAll(overallListOfSongs)
                 }
 
+                userId = getString("userId")!!
                 username = getString("username")!!
             }
         }
@@ -51,6 +53,7 @@ class RecommendationActivity : AppCompatActivity() {
         backButton.setOnClickListener {
             val intent = Intent(this@RecommendationActivity, UserSongsActivity::class.java)
             intent.putExtra("songsList", overallSongsList)
+            intent.putExtra("userId", userId)
             intent.putExtra("username", username)
             startActivity(intent)
         }

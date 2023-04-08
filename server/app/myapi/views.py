@@ -30,7 +30,7 @@ class LoginSpotify(APIView):
         sp = spotipy.Spotify(auth_manager=auth_manager)
 
         # username = request.GET.get('username', '')
-        username = get_username_from_display_name(request.data.get('username'))
+        username = get_username_from_display_name(request.GET.get('username', ''))
         print(f'Username: {username}')
         # This is the object that is returned back to the user
         user_object = {}

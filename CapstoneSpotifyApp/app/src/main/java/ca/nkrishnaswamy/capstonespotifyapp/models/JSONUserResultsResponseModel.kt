@@ -6,5 +6,5 @@ data class JSONUserResultsResponseModel(
     @SerializedName("user_id")
     var user_id: String,
     @SerializedName("songs")
-    var songs: List<JSONUserSongModel>
+    var songs: ArrayList<JSONUserSongModel>
 )

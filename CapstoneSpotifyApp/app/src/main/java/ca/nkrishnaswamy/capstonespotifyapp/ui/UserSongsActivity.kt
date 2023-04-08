@@ -34,6 +34,7 @@ class UserSongsActivity : AppCompatActivity() {
     private var tracker: SelectionTracker<Long>? = null
     private val songsList = ArrayList<SongModel>()
     private var listOfRecommendedSongModels = ArrayList<SongModel>()
+    private lateinit var userId: String
     private lateinit var username: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +56,7 @@ class UserSongsActivity : AppCompatActivity() {
 
         bundle?.let {
             bundle.apply {
+                userId = getString("userId")!!
                 username = getString("username")!!
                 usernameTextView.text = username
 
@@ -100,7 +102,8 @@ class UserSongsActivity : AppCompatActivity() {
                                     errorTextView.text = "Recommendations count must be a non-empty positive number."
                                 } else {
                                     CoroutineScope(Dispatchers.IO).launch{
-                                        // listOfRecommendedSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, numOfRecommendedSongs, username) // UNCOMMENT THIS LATER
+                                        // listOfRecommendedSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, numOfRecommendedSongs, userId) // UNCOMMENT THIS LATER
+                                        Log.d("TESTT", userId)
                                         listOfRecommendedSongModels.add(SongModel("Bye", "MAdele", "5"))
                                         listOfRecommendedSongModels.add(SongModel("Won't", "Wryson Tiller", "6"))
                                         listOfRecommendedSongModels.add(SongModel("Wov", "Wariana Grande", "7"))
@@ -117,6 +120,7 @@ class UserSongsActivity : AppCompatActivity() {
                                                 val intent = Intent(this@UserSongsActivity, RecommendationActivity::class.java)
                                                 intent.putExtra("recommendationsSongsList", listOfRecommendedSongModels)
                                                 intent.putExtra("overallRetrievedSongs", songsList)
+                                                intent.putExtra("userId", userId)
                                                 intent.putExtra("username", username)
                                                 startActivity(intent)
                                             }

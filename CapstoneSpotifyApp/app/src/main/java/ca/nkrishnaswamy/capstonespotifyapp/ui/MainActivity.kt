@@ -40,8 +40,15 @@ class MainActivity : AppCompatActivity() {
                 errorMessageTextView.setTextColor(resources.getColor(R.color.spotify_green))
                 errorMessageTextView.text = "Loading..."
                 CoroutineScope(Dispatchers.IO).launch{
-                    // val listOfSongModels = spotifyViewModel.getUserSongs(username)   // UNCOMMENT LATER, and delete 5 lines below this
+//                    val jsonUserResultsResponseModel = spotifyViewModel.getUserSongs(username)   // UNCOMMENT LATER, and delete the 4 lines adding random songmodels below
+
                     val listOfSongModels = ArrayList<SongModel>()
+
+                    val userId = "SAMPLE USERID"
+//                    val userId = jsonUserResultsResponseModel.user_id
+//
+//                    jsonUserResultsResponseModel.songs.map { listOfSongModels.add(SongModel(it.name, it.artist, it.song_id)) }
+
                     listOfSongModels.add(SongModel("Hello", "Adele", "1"))
                     listOfSongModels.add(SongModel("Don't", "Bryson Tiller", "2"))
                     listOfSongModels.add(SongModel("pov", "Ariana Grande", "3"))
@@ -53,9 +60,10 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             errorMessageTextView.text = null
                             val intent = Intent(this@MainActivity, UserSongsActivity::class.java)
-//                            intent.putExtra("username", username) // UNCOMMENT LATER
                             intent.putExtra("username", "31wexqymjgzdkkved4vcwote7r2q") // DELETE LATER
                             intent.putExtra("songsList", listOfSongModels)
+                            intent.putExtra("userId", userId)
+                            intent.putExtra("username", username)
                             startActivity(intent)
                         }
                     }

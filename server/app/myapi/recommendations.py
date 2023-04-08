@@ -70,7 +70,7 @@ class Recommender(APIView):
         # return Response(response)
 
     def post(self, request, format=None):
-        display_name = get_display_name_from_username(request.data.get('username'))
+        display_name = get_display_name_from_username(request.data['username'])
         song_ids = request.data.get('songs')
         num_of_recommended_songs = request.data.get('num_of_recommended_songs')
         is_dynamic = request.data.get('is_dynamic')

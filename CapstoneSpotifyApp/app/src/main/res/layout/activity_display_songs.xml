@@ -77,6 +77,8 @@
         android:layout_marginBottom="15dp"
         android:gravity="center_horizontal"
         android:textSize="16sp"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"/>
 
 </RelativeLayout>
