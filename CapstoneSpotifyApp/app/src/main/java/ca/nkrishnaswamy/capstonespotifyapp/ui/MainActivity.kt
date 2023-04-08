@@ -49,10 +49,11 @@ class MainActivity : AppCompatActivity() {
 
                     jsonUserResultsResponseModel.songs.map { listOfSongModels.add(SongModel(it.name, it.artist, it.song_id)) }
 
-//                    listOfSongModels.add(SongModel("Hello", "Adele", "1"))
-//                    listOfSongModels.add(SongModel("Don't", "Bryson Tiller", "2"))
-//                    listOfSongModels.add(SongModel("pov", "Ariana Grande", "3"))
-//                    listOfSongModels.add(SongModel("Adaption", "The Weeknd", "4"))
+//                    listOfSongModels.add(SongModel("pov", "Ariana Grande", "1"))
+//                    listOfSongModels.add(SongModel("positions", "Ariana Grande", "2"))
+//                    listOfSongModels.add(SongModel("Adore You", "Miley Cyrus", "3"))
+//                    listOfSongModels.add(SongModel("Sign Of the Times", "Harry Styles", "4"))
+//                    listOfSongModels.add(SongModel("Dangerous Woman", "Ariana Grande", "5"))
                     withContext(Dispatchers.Main) {
                         errorMessageTextView.setTextColor(resources.getColor(R.color.red))
                         if (listOfSongModels.isNullOrEmpty()) {
