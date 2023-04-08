@@ -40,19 +40,19 @@ class MainActivity : AppCompatActivity() {
                 errorMessageTextView.setTextColor(resources.getColor(R.color.spotify_green))
                 errorMessageTextView.text = "Loading..."
                 CoroutineScope(Dispatchers.IO).launch{
-//                    val jsonUserResultsResponseModel = spotifyViewModel.getUserSongs(username)   // UNCOMMENT LATER, and delete the 4 lines adding random songmodels below
+                    val jsonUserResultsResponseModel = spotifyViewModel.getUserSongs(username)
 
                     val listOfSongModels = ArrayList<SongModel>()
 
-                    val userId = "SAMPLE USERID"
-//                    val userId = jsonUserResultsResponseModel.user_id
-//
-//                    jsonUserResultsResponseModel.songs.map { listOfSongModels.add(SongModel(it.name, it.artist, it.song_id)) }
+//                    val userId = "SAMPLE USERID"
+                    val userId = jsonUserResultsResponseModel.user_id
 
-                    listOfSongModels.add(SongModel("Hello", "Adele", "1"))
-                    listOfSongModels.add(SongModel("Don't", "Bryson Tiller", "2"))
-                    listOfSongModels.add(SongModel("pov", "Ariana Grande", "3"))
-                    listOfSongModels.add(SongModel("Adaption", "The Weeknd", "4"))
+                    jsonUserResultsResponseModel.songs.map { listOfSongModels.add(SongModel(it.name, it.artist, it.song_id)) }
+
+//                    listOfSongModels.add(SongModel("Hello", "Adele", "1"))
+//                    listOfSongModels.add(SongModel("Don't", "Bryson Tiller", "2"))
+//                    listOfSongModels.add(SongModel("pov", "Ariana Grande", "3"))
+//                    listOfSongModels.add(SongModel("Adaption", "The Weeknd", "4"))
                     withContext(Dispatchers.Main) {
                         errorMessageTextView.setTextColor(resources.getColor(R.color.red))
                         if (listOfSongModels.isNullOrEmpty()) {
@@ -60,7 +60,6 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             errorMessageTextView.text = null
                             val intent = Intent(this@MainActivity, UserSongsActivity::class.java)
-                            intent.putExtra("username", "31wexqymjgzdkkved4vcwote7r2q") // DELETE LATER
                             intent.putExtra("songsList", listOfSongModels)
                             intent.putExtra("userId", userId)
                             intent.putExtra("username", username)

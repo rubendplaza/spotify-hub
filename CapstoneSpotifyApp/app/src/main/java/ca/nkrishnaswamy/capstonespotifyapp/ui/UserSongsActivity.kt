@@ -111,12 +111,12 @@ class UserSongsActivity : AppCompatActivity() {
                                     errorTextView.text = "Recommendations count must be a non-empty positive number."
                                 } else {
                                     CoroutineScope(Dispatchers.IO).launch{
-                                        // listOfRecommendedSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, numOfRecommendedSongs, userId, isDynamic) // UNCOMMENT THIS LATER
+                                        listOfRecommendedSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, numOfRecommendedSongs, userId, isDynamic)
                                         Log.d("TESTT", userId)
-                                        listOfRecommendedSongModels.add(SongModel("Bye", "MAdele", "5"))
-                                        listOfRecommendedSongModels.add(SongModel("Won't", "Wryson Tiller", "6"))
-                                        listOfRecommendedSongModels.add(SongModel("Wov", "Wariana Grande", "7"))
-                                        listOfRecommendedSongModels.add(SongModel("Wadaption", "The Weekday", "8"))
+//                                        listOfRecommendedSongModels.add(SongModel("Bye", "MAdele", "5"))
+//                                        listOfRecommendedSongModels.add(SongModel("Won't", "Wryson Tiller", "6"))
+//                                        listOfRecommendedSongModels.add(SongModel("Wov", "Wariana Grande", "7"))
+//                                        listOfRecommendedSongModels.add(SongModel("Wadaption", "The Weekday", "8"))
 
                                         withContext(Dispatchers.Main) {
                                             errorTextView.text = "Loading..."
