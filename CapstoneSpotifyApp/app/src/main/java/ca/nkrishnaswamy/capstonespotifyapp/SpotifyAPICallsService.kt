@@ -18,9 +18,9 @@ interface SpotifyAPICallsService {
     companion object {
         operator fun invoke(): SpotifyAPICallsService {
             val client = OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
                 .build()
             val retrofit = Retrofit.Builder().baseUrl(baseUrl).client(client).addConverterFactory(
                 GsonConverterFactory.create()).build()
@@ -34,6 +34,6 @@ interface SpotifyAPICallsService {
 
     @Headers("Content-Type:application/json; charset=UTF-8")
     @POST("/api/get_recommendations")
-    suspend fun getRecommendations(@Body requestBody: RequestBody): Response<ResponseBody>
+    suspend fun getRecommendations(@Body requestBody: RequestBody): Response<JSONUserSongsResponseModel>
 
 }

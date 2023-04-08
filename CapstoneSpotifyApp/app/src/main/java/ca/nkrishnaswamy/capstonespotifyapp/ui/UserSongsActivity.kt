@@ -28,10 +28,13 @@ class UserSongsActivity : AppCompatActivity() {
     private lateinit var usernameTextView : TextView
     private lateinit var errorTextView : TextView
     private lateinit var getRecommendationsButton : MaterialButton
+    private lateinit var countTextView : TextView
     private lateinit var spotifyViewModel : SpotifyViewModel
     private lateinit var recyclerViewAdapter: SongsRecyclerViewAdapter
     private var tracker: SelectionTracker<Long>? = null
     private val songsList = ArrayList<SongModel>()
+    private var listOfRecommendedSongModels = ArrayList<SongModel>()
+    private lateinit var username: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,19 +48,20 @@ class UserSongsActivity : AppCompatActivity() {
         errorTextView = findViewById(R.id.errorMessage)
         getRecommendationsButton = findViewById(R.id.getRecommendationsButton)
         getRecommendationsButton.visibility = View.INVISIBLE
+        countTextView = findViewById(R.id.recommendationsCountEditText)
+        countTextView.visibility = View.INVISIBLE
 
         val bundle: Bundle? = intent.extras
 
         bundle?.let {
             bundle.apply {
-                val username: String? = getString("username")
+                username = getString("username")!!
                 usernameTextView.text = username
 
                 val retrievedSongsList = getParcelableArrayList<SongModel>("songsList")
                 if (retrievedSongsList != null) {
                     songsList.addAll(retrievedSongsList)
                 }
-                Log.d("TESTT", "${songsList.count()}")
             }
         }
 
@@ -83,38 +87,48 @@ class UserSongsActivity : AppCompatActivity() {
                     if (nItems > 0) {
                         errorTextView.text = null
                         getRecommendationsButton.visibility = View.VISIBLE
+                        countTextView.visibility = View.VISIBLE
                         if (tracker?.selection != null) {
                             val selectedList = tracker!!.selection.map {
                                 recyclerViewAdapter.getSongsList()[it.toInt()]
                             }.toList()
 
                             getRecommendationsButton.setOnClickListener {
-                                CoroutineScope(Dispatchers.IO).launch{
-                                     val listOfSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id })
-                                     withContext(Dispatchers.Main) {
-                                         errorTextView.text = "Loading..."
-                                        if (listOfSongModels.isNullOrEmpty()) {
-                                            errorTextView.setTextColor(resources.getColor(R.color.red))
-                                            errorTextView.text = "No recommendations"
-                                            listOfSongModels.add(SongModel("test", "testing", "2"))
-                                        } else if (listOfSongModels.count() > 1) {
-                                            errorTextView.setTextColor(resources.getColor(R.color.red))
-                                            errorTextView.text = "Error"
-                                        } else {
-                                            errorTextView.setTextColor(resources.getColor(R.color.spotify_green))
-                                            errorTextView.text = null
-                                            val intent = Intent(this@UserSongsActivity, RecommendationActivity::class.java)
-                                            intent.putExtra("recommendationsList", listOfSongModels)
-                                            intent.putExtra("overallRetrievedSongs", songsList)
-                                            startActivity(intent)
+                                val numOfRecommendedSongs = countTextView.text.toString().toIntOrNull()
+                                if (numOfRecommendedSongs == null || numOfRecommendedSongs <= 0) {
+                                    errorTextView.setTextColor(resources.getColor(R.color.red))
+                                    errorTextView.text = "Recommendations count must be a non-empty positive number."
+                                } else {
+                                    CoroutineScope(Dispatchers.IO).launch{
+                                        // listOfRecommendedSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, numOfRecommendedSongs, username) // UNCOMMENT THIS LATER
+                                        listOfRecommendedSongModels.add(SongModel("Bye", "MAdele", "5"))
+                                        listOfRecommendedSongModels.add(SongModel("Won't", "Wryson Tiller", "6"))
+                                        listOfRecommendedSongModels.add(SongModel("Wov", "Wariana Grande", "7"))
+                                        listOfRecommendedSongModels.add(SongModel("Wadaption", "The Weekday", "8"))
+
+                                        withContext(Dispatchers.Main) {
+                                            errorTextView.text = "Loading..."
+                                            if (listOfRecommendedSongModels.isNullOrEmpty()) {
+                                                errorTextView.setTextColor(resources.getColor(R.color.red))
+                                                errorTextView.text = "No recommendations"
+                                                listOfRecommendedSongModels.add(SongModel("test", "testing", "2"))
+                                            } else {
+                                                errorTextView.text = null
+                                                val intent = Intent(this@UserSongsActivity, RecommendationActivity::class.java)
+                                                intent.putExtra("recommendationsSongsList", listOfRecommendedSongModels)
+                                                intent.putExtra("overallRetrievedSongs", songsList)
+                                                intent.putExtra("username", username)
+                                                startActivity(intent)
+                                            }
                                         }
-                                     }
-                                 }
+                                    }
+                                }
                             }
                         }
                     } else {
                         errorTextView.text = null
                         getRecommendationsButton.visibility = View.INVISIBLE
+                        countTextView.visibility = View.INVISIBLE
                     }
                 }
             })

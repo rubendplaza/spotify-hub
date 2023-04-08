@@ -4,53 +4,31 @@
     android:layout_height="match_parent"
     android:background="@color/black">
 
-    <LinearLayout
-        android:id="@+id/LinCenterLayout"
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_marginLeft="40dp"
-        android:layout_marginRight="40dp"
-        android:orientation="vertical">
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:id="@+id/recommendedSongsTV"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:text="Recommended Songs:"
+        android:textColor="@color/spotify_green"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:gravity="center"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginBottom="30dp"
-            android:gravity="center"
-            android:text="Recommended Song:"
-            android:textColor="@color/spotify_green"
-            android:textSize="30sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:paddingBottom="15dp"
-            android:paddingTop="15dp"
-            android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:background="@color/spotify_green"
-            android:id="@+id/recommended_song_name"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:paddingBottom="15dp"
-            android:paddingTop="15dp"
-            android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:background="@color/spotify_green"
-            android:id="@+id/recommended_artist_name"/>
-
-    </LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recommendationsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/recommendedSongsTV"
+        android:layout_above="@id/backButton"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="20dp"/>
 
     <com.google.android.material.button.MaterialButton
         android:layout_width="match_parent"

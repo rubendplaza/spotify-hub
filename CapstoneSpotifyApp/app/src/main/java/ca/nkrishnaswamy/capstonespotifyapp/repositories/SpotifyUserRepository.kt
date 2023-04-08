@@ -17,6 +17,8 @@ class SpotifyUserRepository() {
 
     suspend fun getUserSongs(username: String) : ArrayList<SongModel> {
 
+        Log.d("TESTTT", username)
+
         val response = apiCallService.getSongsOfUser(username)
 
         val resultSongsList : ArrayList<SongModel> = ArrayList()
@@ -36,11 +38,13 @@ class SpotifyUserRepository() {
         return resultSongsList
     }
 
-    suspend fun getRecommendations(songIdsList: List<String>) : ArrayList<SongModel> {
+    suspend fun getRecommendations(songIdsList: List<String>, numOfRecommendedSongs: Int, username: String) : ArrayList<SongModel> {
 
         val jsonObject = JSONObject()
         jsonObject.put("songs", songIdsList)
-        jsonObject.put("num_of_recommended_songs", 1) // hard-coding this to 1
+        jsonObject.put("num_of_recommended_songs", numOfRecommendedSongs)
+        jsonObject.put("username", username)
+        jsonObject.put("is_dynamic", true)
 
         val jsonObjectString = jsonObject.toString()
         val requestBody = jsonObjectString.toRequestBody("application/json".toMediaTypeOrNull())
@@ -49,9 +53,16 @@ class SpotifyUserRepository() {
         val recommendationsList : ArrayList<SongModel> = ArrayList()
 
         if (response.isSuccessful) {
-            val resultsDict = response.body()
-            if (resultsDict != null) {
-                Log.d("TESTTT", resultsDict.string())
+            val songsList = response.body()?.results?.songs
+            if (songsList != null) {
+                for (i in 0 until songsList.count()) {
+                    val songId = ""
+                    val artist = songsList[i].artist
+                    val name = songsList[i].name
+
+                    val currentSong = SongModel(name, artist, songId)
+                    recommendationsList.add(currentSong)
+                }
             }
         }
         return recommendationsList
