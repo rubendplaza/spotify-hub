@@ -7,6 +7,8 @@ from rest_framework.response import Response
 import numpy as np
 import pandas as pd
 
+import csv
+
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from spotifydb.models import Playlist, Song, User
@@ -56,10 +58,10 @@ class Recommender(APIView):
         is_dynamic = request.data.get('is_dynamic')
 
         print(f'Display name received: {display_name}')
-        print(song_ids)
-        print(num_of_recommended_songs)
-        print(type(is_dynamic))
-        print(is_dynamic)
+        # print(song_ids)
+        # print(num_of_recommended_songs)
+        # print(type(is_dynamic))
+        print(f"Dynamic mode is set to: {is_dynamic}")
 
         auth_manager = SpotifyClientCredentials(client_id=SPOTIFY_CREDS4[0], client_secret=SPOTIFY_CREDS4[1])
         sp = spotipy.Spotify(auth_manager=auth_manager)
@@ -125,6 +127,7 @@ class Recommender(APIView):
         #     song_features[i].update({"artist": artist})
 
             # i = i + 1
+
         i = 0
         input_tracks = sp.tracks(song_ids)['tracks']
         for track in input_tracks:
@@ -143,18 +146,24 @@ class Recommender(APIView):
         ]
 
         all_songs = None
-
         if (is_dynamic):
-            print('Getting dynamic...')
+            print('Getting CBF recommended songs dynamically...')
             all_songs = get_cbf_rec_songs_dynamic(sp, arr_recommended_artists)
+
+            # Uncomment this (and the function) to add dynamic songs to the .csv file
+            # create_data_csv(all_songs)
+        else:
+            print('Getting CBF recommended songs from static CSV file')
+            all_songs = get_cbf_rec_songs_static(arr_recommended_artists)
 
         # Use CBF model to get recommended number of songs
         print('Getting recommended songs...')
-        recommended_songs = get_CBF_songs(input_songs, 50, all_songs)
+        recommended_songs = get_CBF_songs(input_songs, all_songs, 50)
         # recommended_songs = recommended_songs[['name', 'artists']]
         recommended_songs = recommended_songs['id'].tolist()
 
         print(f'Length of rec songs: {len(recommended_songs)}')
+        
         output_songs = [] # list of object
         tracks = sp.tracks(recommended_songs)['tracks']
 
@@ -164,34 +173,17 @@ class Recommender(APIView):
             tmp = { "name": name, "artist": artist }
             output_songs.append(tmp)
 
-        #     artist = track['album']['artists'][0]['name']
-        # for id in recommended_songs:
-        #     print('Getting track...')
-        #     track = sp.track(id)
-        #     name = track['name']
-        #     artist = track['album']['artists'][0]['name']
-        #     tmp = { "name": name, "artist": artist }
-        #     output_songs.append(tmp)
-            # print(f'Name: {name} Artist: {artist}')
-
-            # add name and artist feature to current song_features list of dictionaries
-            # song_features[i].update({"name": name})
-            # song_features[i].update({"artist": artist})
-
-            # i = i + 1
-
         df = pd.DataFrame(output_songs)
         df.drop_duplicates(subset=['name', 'artist'], inplace=True)
-        unique_songs = df.head(num_of_recommended_songs).to_dict('records')
+        unique_songs = df.head(num_of_recommended_songs)
 
+        # Print before turning to dictionary (looks cleaner in console)
         print("Recommended songs from CBF:")
-        print(recommended_songs)
-        print(type(recommended_songs))
+        print(unique_songs)
+        print(type(unique_songs))
 
-        # songs (not in db) -> spotify api (optional to store in db for subsequent calls) -> extract features that you want -> get recommendation from model -> is song made by someone in recommended artists
-
-        # dict_recommended_songs = recommended_songs.to_dict()
-
+        unique_songs = unique_songs.to_dict('records')
+        
         response = {}
         response['status'] = 200
         response['message'] = 'success'
@@ -202,7 +194,49 @@ class Recommender(APIView):
         return Response(response)
     
 
+# def create_data_csv(all_songs):   
+#     print("Attempting to create a .csv from 'all_songs'")
+
+#     # name of the output CSV file
+#     filename = "data.csv"
+
+#     # list of keys for the dictionary (to be used as CSV header)
+#     header = ['artist', 'id', 'valence', 'acousticness', 'danceability', 'energy', 'instrumentalness', 'liveness', 'speechiness']
+
+#     # open the CSV file in append mode and write the rows
+#     with open(filename, "a", newline="") as csvfile:
+#         writer = csv.DictWriter(csvfile, fieldnames = header)
+
+#         # write each dictionary to a row in the CSV file
+#         for row in all_songs:
+#             writer.writerow(row)
+
+def get_cbf_rec_songs_static(artists):
+
+    static_cbf_data = pd.read_csv('data.csv', encoding='utf-8')
+
+    # Create a list of the column names without artists
+    column_names = list(static_cbf_data.columns)
+    column_names.remove('artist')
+
+    # These are the songs that will be returned
+    songs = []
+
+    # loop through each row of the dataframe
+    for index, row in static_cbf_data.iterrows():
+        # check if the value in the artist column is in the search list
+        if row['artist'] in artists:
+            # create a dictionary of the remaining columns
+            remaining_dict = {col_name: row[col_name] for col_name in column_names}
+            # append the dictionary to the result list
+            songs.append(remaining_dict)
+
+    return songs
+
 def get_cbf_rec_songs_dynamic(sp, artists):
+
+    # map_artist_uri_to_name = {} # This is for building .csv (static CBF)
+    # artist_list = [] # This is for building .csv (static CBF)
 
     artist_uris = []
     print('Artist searches...')
@@ -212,11 +246,13 @@ def get_cbf_rec_songs_dynamic(sp, artists):
         first_name_from_search = artist_search['artists']['items'][0]['name']
         if (first_name_from_search == artist):
             artist_uris.append(artist_search['artists']['items'][0]['uri'])
+
+            # map_artist_uri_to_name.update({artist_search['artists']['items'][0]['uri']: first_name_from_search}) # This is for building .csv (static CBF)
             continue
         sleep(0.25)
 
-    print('Getting albums....')
     track_uris = []
+    print('Getting albums....')
     for artist_uri in artist_uris:
         print('New artist...')
         artist_albums = sp.artist_albums(artist_uri, album_type='album')
@@ -226,28 +262,40 @@ def get_cbf_rec_songs_dynamic(sp, artists):
             for track in tracks:
                 track_uri = track['uri']
                 track_uris.append(track_uri)
+
+                # artist_list.append(map_artist_uri_to_name[artist_uri]) # This is for building .csv (static CBF)
             sleep(0.1)
 
-    print('Getting audio features...')
     song_features = []
+    print('Getting audio features...')
     while track_uris:
         print('Calling for 99 tracks...')
         tmp_song_features = sp.audio_features(track_uris[0:99])
+
         song_features += tmp_song_features
         track_uris = track_uris[99:]
+
+    # add a new key-value pair (artist: artist_name) to each dictionary in song_features using zip() - FOR CBF Static stuff
+    # for d, artist_name in zip(song_features, artist_list):
+    #     if d is not None:
+    #         d['artist'] = artist_name
     
-    data = {
-        "features": song_features
-    }
-    with open('dump.json', 'w') as f:
-        json.dump(data, f)
+    # Below was just for debug
+    # data = {
+    #     "features": song_features
+    # }
+    # with open('dump.json', 'w') as f:
+    #     json.dump(data, f)
 
     # Desired features for our content based algorithm
+    # desired_features = ['artist', 'id', 'valence', 'acousticness', 'danceability', 'energy', 'instrumentalness', 'liveness', 'speechiness',] # Static CBF stuff
     desired_features = ['id', 'valence', 'acousticness', 'danceability', 'energy', 'instrumentalness', 'liveness', 'speechiness',]
+    
     # Create new list of song dictionaries with only desired features
     songs = [
         {k: v for k, v in d.items() if k in desired_features} for d in song_features if d is not None
     ]
+
     # songs = [
     #     (new_dict := {k: v for k, v in d.items() if k in desired_features}, 
     #     print(f"Iteration {i+1}: {len(new_dict)} desired features added to new song dictionary."))
@@ -257,24 +305,17 @@ def get_cbf_rec_songs_dynamic(sp, artists):
 
     return songs
 
-def get_CBF_songs(songs, num_of_recommended_songs=50, all_songs=None):
-
-    # 
+def get_CBF_songs(songs, all_songs, num_of_recommended_songs=50):
 
     # Convert songs (list of dictionaries) to a pandas dataframe
     input_songs = pd.DataFrame(songs)
 
     # Get the dataset from which we recommend songs from
-    if all_songs is None: 
-        data_original = pd.read_csv('data.csv')
-    else:
-        data_original = pd.DataFrame(all_songs)
-        # print(data_original)
+    data_original = pd.DataFrame(all_songs)
 
     # Drop duplicate songs
     # data_original = data_original.drop_duplicates(subset=['name'])
     data_original = data_original.drop_duplicates(subset=['valence', 'danceability', 'energy', 'instrumentalness', 'liveness', 'speechiness'])
-
 
     # Standardize some relevent columns from the data -> Converts to Numpy Array first
     num_col_names = ['valence', 'acousticness', 'danceability', 'energy', 'instrumentalness', 'liveness', 'speechiness']
