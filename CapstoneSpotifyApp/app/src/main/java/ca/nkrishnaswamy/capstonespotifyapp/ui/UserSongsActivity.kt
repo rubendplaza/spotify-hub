@@ -113,10 +113,10 @@ class UserSongsActivity : AppCompatActivity() {
                                     CoroutineScope(Dispatchers.IO).launch{
                                         listOfRecommendedSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, numOfRecommendedSongs, userId, isDynamic)
                                         Log.d("TESTT", userId)
-//                                        listOfRecommendedSongModels.add(SongModel("Bye", "MAdele", "5"))
-//                                        listOfRecommendedSongModels.add(SongModel("Won't", "Wryson Tiller", "6"))
-//                                        listOfRecommendedSongModels.add(SongModel("Wov", "Wariana Grande", "7"))
-//                                        listOfRecommendedSongModels.add(SongModel("Wadaption", "The Weekday", "8"))
+//                                        listOfRecommendedSongModels.add(SongModel("Ready or Not (with Busta Rhymes)", "Calvin Harris", "6"))
+//                                        listOfRecommendedSongModels.add(SongModel("Countdown", "Beyoncé", "7"))
+//                                        listOfRecommendedSongModels.add(SongModel("Glasgow", "David Guetta", "8"))
+//                                        listOfRecommendedSongModels.add(SongModel("Closure", "Taylor Swift", "9"))
 
                                         withContext(Dispatchers.Main) {
                                             errorTextView.text = "Loading..."
