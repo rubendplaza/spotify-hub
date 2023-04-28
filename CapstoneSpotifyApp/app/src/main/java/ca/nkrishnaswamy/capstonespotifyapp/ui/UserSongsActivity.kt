@@ -24,6 +24,7 @@ import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
 
 class UserSongsActivity : AppCompatActivity() {
@@ -39,7 +40,7 @@ class UserSongsActivity : AppCompatActivity() {
     private var listOfRecommendedSongModels = ArrayList<SongModel>()
     private lateinit var userId: String
     private lateinit var username: String
-    private var isDynamic: Boolean = false
+    private var isDynamic: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,13 +126,13 @@ class UserSongsActivity : AppCompatActivity() {
                                                 errorTextView.text = "No recommendations"
                                                 listOfRecommendedSongModels.add(SongModel("test", "testing", "2"))
                                             } else {
-                                                errorTextView.text = null
                                                 val intent = Intent(this@UserSongsActivity, RecommendationActivity::class.java)
                                                 intent.putExtra("recommendationsSongsList", listOfRecommendedSongModels)
                                                 intent.putExtra("overallRetrievedSongs", songsList)
                                                 intent.putExtra("userId", userId)
                                                 intent.putExtra("username", username)
                                                 startActivity(intent)
+                                                errorTextView.text = null
                                             }
                                         }
                                     }

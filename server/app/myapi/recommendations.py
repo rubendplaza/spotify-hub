@@ -56,6 +56,8 @@ class Recommender(APIView):
         song_ids = request.data.get('songs')
         num_of_recommended_songs = request.data.get('num_of_recommended_songs')
         is_dynamic = request.data.get('is_dynamic')
+        song_ids = song_ids[1:-1].split(", ")
+
 
         print(f'Display name received: {display_name}')
         # print(song_ids)
