@@ -110,6 +110,7 @@ class UserSongsActivity : AppCompatActivity() {
                                     errorTextView.setTextColor(resources.getColor(R.color.red))
                                     errorTextView.text = "Recommendations count must be a non-empty positive number."
                                 } else {
+                                    errorTextView.text = "Loading..."
                                     CoroutineScope(Dispatchers.IO).launch{
                                         listOfRecommendedSongModels = spotifyViewModel.getRecommendations(selectedList.map { it.song_id }, numOfRecommendedSongs, userId, isDynamic)
                                         Log.d("TESTT", userId)
@@ -119,7 +120,6 @@ class UserSongsActivity : AppCompatActivity() {
 //                                        listOfRecommendedSongModels.add(SongModel("Closure", "Taylor Swift", "9"))
 
                                         withContext(Dispatchers.Main) {
-                                            errorTextView.text = "Loading..."
                                             if (listOfRecommendedSongModels.isNullOrEmpty()) {
                                                 errorTextView.setTextColor(resources.getColor(R.color.red))
                                                 errorTextView.text = "No recommendations"
